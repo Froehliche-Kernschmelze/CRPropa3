@@ -73,6 +73,19 @@ void PhotoPionProduction::initRate(std::string filename) {
         throw std::runtime_error("PhotoPionProduction: could not open file " + filename);
 
     double zOld = -1, aOld = -1;
+    // while (infile.good()) {
+    //     if (infile.peek() == '#') {
+    //         infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    //         continue;
+    //     }
+    //     double a, b, c;
+    //     infile >> a >> b >> c;
+    //     if (!infile)
+    //         break;
+    //     tabLorentz.push_back(pow(10, a));
+    //     tabProtonRate.push_back(b / Mpc);
+    //     tabNeutronRate.push_back(c / Mpc);
+    // }
     while (infile.good()) {
         if (infile.peek() == '#') {
             infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -105,8 +118,8 @@ double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) co
     if (gamma < tabLorentz.front() or (gamma > tabLorentz.back()))
         return std::numeric_limits<double>::max();
 
-    double rate = interpolate(gamma, tabLorentz, tabRate);
-    std::cout << gamma << " " << rate << " | ";
+    double rate = interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
+    std::cout <<  int(onProton) << " " << z << " " << gamma << " " << rate << " | ";
     // cosmological scaling
     rate *= pow(1 + z, 2);
 
