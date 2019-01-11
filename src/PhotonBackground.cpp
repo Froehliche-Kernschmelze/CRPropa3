@@ -131,13 +131,12 @@ std::string photonFieldName(PhotonField photonField) {
 
 
 Photon_Field::Photon_Field(std::string fieldPath) {
-    // constructor
     init(fieldPath);
 }
 
 
 Photon_Field::Photon_Field() {
-    // constructor 2
+    // empty constructor for initialization in some modules
 }
 
 
