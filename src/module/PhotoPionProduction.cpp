@@ -209,7 +209,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     double outputEnergy[2000];
     int outPartID[2000];
     int nOutPart;
-    
+
     #pragma omp critical
     {
         sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
