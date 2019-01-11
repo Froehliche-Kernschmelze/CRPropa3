@@ -62,7 +62,7 @@ class Photon_Field {
      */
     explicit Photon_Field(std::string fieldPath);
 
-    /* Empty constructor to easy initialization in some modules
+    /* Empty constructor to ease initialization in some modules
      */
     Photon_Field();
 
@@ -83,11 +83,9 @@ class Photon_Field {
     double functs(double s, bool onProton) const;
     double prob_eps(double eps, bool onProton, double E_in, int z_pos) const;
     double crossection(double eps, bool onProton) const;
-        double Pl(double, double, double, double) const;
-        double Ef(double, double, double) const;
-        double breitwigner(double, double, double, double, bool onProton) const;
-        double singleback(double) const;
-        double twoback(double) const;
+        double Pl(double eps, double eps_threshold, double eps_max, double weight) const;
+        double Ef(double eps, double eps_threshold, double threshold) const;
+        double breitwigner(double xsection, double width, double m_resonance, double eps, bool onProton) const;
 };
 
 /** @}*/
