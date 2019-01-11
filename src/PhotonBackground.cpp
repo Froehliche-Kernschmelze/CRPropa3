@@ -148,7 +148,8 @@ double Photon_Field::sample_eps(bool onProton, double E_in, double z_in) const {
 */ 
     const double mass = onProton? 0.93827 : 0.93947;  // Gev/c^2
     const double z_max = redshift[redshift.size()-1];
-    if (z_in > z_max) { return 0.; }
+    if (z_in > z_max)
+        return 0.;
     double z_pos;
     double smallestDiff = z_max;
     for (int i = 0; i < redshift.size(); ++i) {
@@ -177,8 +178,8 @@ double Photon_Field::sample_eps(bool onProton, double E_in, double z_in) const {
     }
     double eps_pMax = energy[closestPos];
     double pMax = prob_eps(eps_pMax, onProton, E_in, z_pos)/cnorm;
-    if ( (pMax < 0.01) || (pMax > 1.) ) { pMax = 1.; }
-
+    if ( (pMax < 0.01) || (pMax > 1.) )
+        pMax = 1.;
     // sample eps randomly between epsMin ... epsMax
     Random &random = Random::instance();
     do {
@@ -197,7 +198,7 @@ void Photon_Field::init(std::string filename) {
     std::string line;
     int i = 0;
     while ( std::getline(infile, line) ) {
-        if (line.find('#') == 0 )
+        if (line.find('#') == 0)
             continue;
         std::istringstream ss(line);
         std::vector<double> vec;
@@ -205,10 +206,14 @@ void Photon_Field::init(std::string filename) {
         while (ss >> n)
             vec.push_back(n);
         if (i == 0) {
-            energy = vec; i++; continue;
+            energy = vec;
+            i++;
+            continue;
         }
         if (i == 1) {
-            redshift = vec; i++; continue;
+            redshift = vec;
+            i++;
+            continue;
         }
         dn_deps.push_back(vec);
     }
@@ -415,7 +420,7 @@ double Photon_Field::Ef(double x, double th, double w) const {
 double Photon_Field::breitwigner(double sigma_0, double Gamma, double DMM, double eps_prime, bool onProton) const {
 /*
     - input: cross section [µbarn], width [GeV], mass [GeV/c^2]
-    - output: Breit-Wigner crossection of a resonance widh width Gamma
+    - output: Breit-Wigner crossection of a resonance widt width Gamma
     - called by: crossection
 */
     const double mass = onProton? 0.93827 : 0.93947;  // Gev/c^2
