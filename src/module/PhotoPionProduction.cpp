@@ -97,7 +97,7 @@ void PhotoPionProduction::initRate(std::string filename) {
     infile.close();
 }
 
-double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton, Vector3d pos, double time) const {
+double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) const {
     const std::vector<double> &tabRate = (onProton)? tabProtonRate : tabNeutronRate;
 
     // scale nucleus energy instead of background photon energy
@@ -124,8 +124,6 @@ double PhotoPionProduction::nucleiModification(int A, int X) const {
 void PhotoPionProduction::process(Candidate *candidate) const {
     double step = candidate->getCurrentStep();
     double z = candidate->getRedshift();
-    Vector3d pos = candidate->current.getPosition();
-double time = candidate->getTrajectoryLength()/c_light;
     // the loop is processed at least once for limiting the next step
     do {
         // check if nucleus
@@ -147,13 +145,13 @@ double time = candidate->getTrajectoryLength()/c_light;
 
         // check for interaction on protons
         if (Z > 0) {
-            meanFreePath = nucleonMFP(gamma, z, true, pos, time) / nucleiModification(A, Z);
+            meanFreePath = nucleonMFP(gamma, z, true) / nucleiModification(A, Z);
             randDistance = -log(random.rand()) * meanFreePath;
             totalRate += 1. / meanFreePath;
         }
         // check for interaction on neutrons
         if (N > 0) {
-            meanFreePath = nucleonMFP(gamma, z, false, pos, time) / nucleiModification(A, N);
+            meanFreePath = nucleonMFP(gamma, z, false) / nucleiModification(A, N);
             totalRate += 1. / meanFreePath;
             double d = -log(random.rand()) * meanFreePath;
             if (d < randDistance) {
@@ -164,6 +162,7 @@ double time = candidate->getTrajectoryLength()/c_light;
         // check if interaction does not happen
         if ( meanFreePath == std::numeric_limits<double>::max())
             return;
+        std::cout << step << " : " << randDistance << std::endl;
         if (step < randDistance) {
             if (totalRate > 0.)
                 candidate->limitNextStep(limit / totalRate);
@@ -197,7 +196,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     double outputEnergy[2000];
     int outPartID[2000];
     int nOutPart;
-
+    // std::cout << nature << " : " << Ein << " : " << eps << std::endl;
     #pragma omp critical
     {
         sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
