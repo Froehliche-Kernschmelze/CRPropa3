@@ -105,8 +105,8 @@ double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) co
     if (gamma < tabLorentz.front() or (gamma > tabLorentz.back()))
         return std::numeric_limits<double>::max();
 
-    std::cout << z << " " << gamma << " ";
-    double rate = interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
+    double rate = interpolate(gamma, tabLorentz, tabRate);
+    std::cout << gamma << " " << rate << " | ";
     // cosmological scaling
     rate *= pow(1 + z, 2);
 
