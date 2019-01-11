@@ -6,10 +6,10 @@
 
 #include <kiss/convert.h>
 #include "sophia.h"
-#include <stdlib.h>  // srand, rand, abs !
-#include <math.h>  // log10 !
+#include <stdlib.h>
+#include <math.h>
 
-#include <algorithm>    // std::find
+#include <algorithm>
 #include <limits>
 #include <cmath>
 #include <sstream>
@@ -33,7 +33,6 @@ PhotoPionProduction::PhotoPionProduction( PhotonField field,
     setPhotonField(field);
     this->phtnfld = Photon_Field(getDataPath("Scaling/" + photonFieldName(field) + ".txt"));
 }
-
 
 void PhotoPionProduction::setPhotonField(PhotonField field) {
     photonField = field;
@@ -244,11 +243,11 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
                     candidate->addSecondary(22, Eout, pos);
                 break;
             case 2: // positron
-                if (haveElectrons)  // if this is havePhotons, this works with PPP
+                if (haveElectrons)
                     candidate->addSecondary(sign * -11, Eout, pos);
                 break;
             case 3: // electron
-                if (haveElectrons)  // if this is havePhotons, this works with PPP
+                if (haveElectrons)
                     candidate->addSecondary(sign * 11, Eout, pos);
                 break;
             case 15: // nu_e
