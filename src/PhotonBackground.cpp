@@ -151,7 +151,7 @@ double Photon_Field::sample_eps(bool onProton, double E_in, double z_in) const {
     const double z_max = redshift[redshift.size()-1];
     if ( (z_in < z_min) || (z_in > z_max) )
         return 0.;
-    double z_pos;
+    int z_pos;
     double smallestDiff = z_max;
     for (int i = 0; i < redshift.size(); ++i) {
         double diff = std::abs(z_in-redshift[i]);
