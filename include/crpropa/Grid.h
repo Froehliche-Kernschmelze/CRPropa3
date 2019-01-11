@@ -91,6 +91,15 @@ public:
 		this->origin = origin;
 		this->gridOrigin = origin + spacing/2;
 	}
+	
+	/** Resize grid, also enlarges the volume as the spacing stays constant */
+	void setGridSize(size_t Nx, size_t Ny, size_t Nz) {
+		this->Nx = Nx;
+		this->Ny = Ny;
+		this->Nz = Nz;
+		grid.resize(Nx * Ny * Nz);
+		setOrigin(origin);
+	}
 
 	void setSpacing(Vector3d spacing) {
 		this->spacing = spacing;

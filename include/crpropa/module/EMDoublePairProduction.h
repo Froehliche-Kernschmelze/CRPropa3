@@ -18,7 +18,6 @@ namespace crpropa {
 class EMDoublePairProduction: public Module {
 private:
 	PhotonField photonField;
-	ScalarGrid4d geometryGrid;
 	bool haveElectrons;
 	double limit;
 
@@ -29,7 +28,6 @@ private:
 public:
 	EMDoublePairProduction(
 		PhotonField photonField = CMB, //!< target photon background
-		ScalarGrid4d geometryGrid = ScalarGrid4d(Vector3d(0.),0., 1,1,1,1, Vector3d(1.),1.), //!< spacial and temporal dependence of photon field
 		bool haveElectrons = false,    //!< switch to create the secondary electron pair
 		double limit = 0.1             //!< step size limit as fraction of mean free path
 		);
