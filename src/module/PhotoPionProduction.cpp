@@ -105,8 +105,8 @@ double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) co
     if (gamma < tabLorentz.front() or (gamma > tabLorentz.back()))
         return std::numeric_limits<double>::max();
 
+    std::cout << z << " " << gamma << " ";
     double rate = interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
-
     // cosmological scaling
     rate *= pow(1 + z, 2);
 
@@ -162,7 +162,7 @@ void PhotoPionProduction::process(Candidate *candidate) const {
         // check if interaction does not happen
         if ( meanFreePath == std::numeric_limits<double>::max())
             return;
-        std::cout << step << " : " << meanFreePath << std::endl;
+        // std::cout << step << " : " << meanFreePath << std::endl;
         if (step < randDistance) {
             if (totalRate > 0.)
                 candidate->limitNextStep(limit / totalRate);
