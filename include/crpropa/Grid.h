@@ -42,12 +42,10 @@ inline double round(double r) {
 template<typename T>
 class Grid: public Referenced {
 	std::vector<T> grid;
-	size_t Nx, Ny, Nz, Nt; /**< Number of grid points (x,y,z) and number of time points (t) */
+	size_t Nx, Ny, Nz; /**< Number of grid points (x,y,z) */
 	Vector3d origin; /**< Origin of the volume that is represented by the grid. */
 	Vector3d gridOrigin; /**< Grid origin */
-	Vector3d spacing; /**< Distance between grid points, determines the spatial extension of the grid */
-	double timing; /**< Time between grid points, determines the temporal extension of the grid */
-	double startTime;  /**< Point of time from which the grid starts */
+	Vector3d spacing; /**< Distance between grid points, determines the extension of the grid */
 	bool reflective; /**< If set to true, the grid is repeated reflectively instead of periodically */
 
 
@@ -63,10 +61,8 @@ public:
 	 */
 	Grid(Vector3d origin, size_t N, Vector3d spacing) {
 		setOrigin(origin);
-		setGridSize(N, N, N, 1);
+		setGridSize(N, N, N);
 		setSpacing(spacing);
-		setTiming(1.);
-		setStartTime(0.);
 		setReflective(false);
 	}
 
@@ -79,30 +75,15 @@ public:
 	 */
 	Grid(Vector3d origin, size_t Nx, size_t Ny, size_t Nz, Vector3d spacing) {
 		setOrigin(origin);
-		setGridSize(Nx, Ny, Nz, 1);
+		setGridSize(Nx, Ny, Nz);
 		setSpacing(spacing);
-		setTiming(1.);
-		setStartTime(0.);
 		setReflective(false);
 	}
 
-	// ScalarGrid4d
-	/** Constructor for 4-dimensional grid (space + time)
-	 @param	origin	Position of the lower left front corner of the volume
-	 @param start   Starting point of time
-	 @param	Nx		Number of grid points in x-direction
-	 @param	Ny		Number of grid points in y-direction
-	 @param	Nz		Number of grid points in z-direction
-	 @param Nt      Number of grid points in t-direction (set 1 for time-independent)
-	 @param spacing	Spacing between grid points
-	 @param timing  Amount of time between grid points in t-direction
-	 */
-	Grid(Vector3d origin, double start, size_t Nx, size_t Ny, size_t Nz, size_t Nt, Vector3d spacing, double timing) {
+	Grid(Vector3d origin, size_t Nx, size_t Ny, size_t Nz, double spacing) {
 		setOrigin(origin);
-		setGridSize(Nx, Ny, Nz, Nt);
-		setSpacing(spacing);
-		setTiming(timing);
-		setStartTime(start);
+		setGridSize(Nx, Ny, Nz);
+		setSpacing(Vector3d(spacing));
 		setReflective(false);
 	}
 
@@ -111,30 +92,9 @@ public:
 		this->gridOrigin = origin + spacing/2;
 	}
 
-	// ScalarGrid4d
-	void setStartTime(double start) {
-		this->startTime = start;
-	}
-
-	// ScalarGrid4d
-	/** Resize grid, also enlarges the volume as the spacing stays constant */
-	void setGridSize(size_t Nx, size_t Ny, size_t Nz, size_t Nt) {
-		this->Nx = Nx;
-		this->Ny = Ny;
-		this->Nz = Nz;
-		this->Nt = Nt;
-		grid.resize(Nx * Ny * Nz * Nt);
-		setOrigin(origin);
-	}
-
 	void setSpacing(Vector3d spacing) {
 		this->spacing = spacing;
 		setOrigin(origin);
-	}
-
-	// ScalarGrid4d
-	void setTiming(double timing) {
-		this->timing = timing;
 	}
 
 	void setReflective(bool b) {
@@ -143,11 +103,6 @@ public:
 
 	Vector3d getOrigin() const {
 		return origin;
-	}
-
-	// ScalarGrid4d
-	double getStartTime() const {
-		return startTime;
 	}
 
 	size_t getNx() const {
@@ -162,18 +117,8 @@ public:
 		return Nz;
 	}
 
-	// ScalarGrid4d
-	size_t getNt() const {
-	return Nt;
-	}
-
 	Vector3d getSpacing() const {
 		return spacing;
-	}
-
-	// ScalarGrid4d
-	double getTiming() const {
-		return timing;
 	}
 
 	bool isReflective() const {
@@ -190,26 +135,8 @@ public:
 		return grid[ix * Ny * Nz + iy * Nz + iz];
 	}
 
-	// ScalarGrid4d
-	/** Inspector & Mutator */
-	T &get(size_t ix, size_t iy, size_t iz, size_t it) {
-		return grid[ix * Ny * Nz * Nt + iy * Nz * Nt + iz * Nt + it];
-	}
-
-	// ScalarGrid4d
-	/** Inspector & Mutator */
-	const T &get(size_t ix, size_t iy, size_t iz, size_t it) const {
-		return grid[ix * Ny * Nz * Nt + iy * Nz * Nt + iz * Nt + it];
-	}
-
 	T getValue(size_t ix, size_t iy, size_t iz) {
 		return grid[ix * Ny * Nz + iy * Nz + iz];
-	}
-
-	// ScalarGrid4d 
-	/** Inspector */
-	T getValue(size_t ix, size_t iy, size_t iz, size_t it) {
-		return grid[ix * Ny * Nz * Nt + iy * Nz * Nt + iz * Nt + it];
 	}
 
 	void setValue(size_t ix, size_t iy, size_t iz, T value) {
@@ -296,77 +223,8 @@ public:
 
 		return b;
 	}
-
-	/** Interpolate the grid at a given position and point of time */
-	T interpolate(const Vector3d &position, const double time) const {
-		// position on a unit grid
-		Vector3d r = (position - gridOrigin) / spacing;
-		double t = (time - startTime) / timing;
-
-		// indices of lower and upper neighbors
-		int ix, iX, iy, iY, iz, iZ, it, iT;
-		if (reflective) {
-			reflectiveClamp(r.x, Nx, ix, iX);
-			reflectiveClamp(r.y, Ny, iy, iY);
-			reflectiveClamp(r.z, Nz, iz, iZ);
-			reflectiveClamp(t, Nt, it, iT);
-		} else {
-			periodicClamp(r.x, Nx, ix, iX);
-			periodicClamp(r.y, Ny, iy, iY);
-			periodicClamp(r.z, Nz, iz, iZ);
-			periodicClamp(t, Nt, it, iT);
-		}
-
-		// linear fraction to lower and upper neighbors
-		double fx = r.x - floor(r.x);
-		double fX = 1 - fx;
-		double fy = r.y - floor(r.y);
-		double fY = 1 - fy;
-		double fz = r.z - floor(r.z);
-		double fZ = 1 - fz;
-		double ft = t - floor(t);
-		double fT = 1 - ft;
-
-		// quadrilinear interpolation (generalized from: see http://paulbourke.net/miscellaneous/interpolation)
-		T b(0.);
-		//V0000 (1 - x) (1 - y) (1 - z) (1 - t) +
-		b += get(ix, iy, iz, it) * fX * fY * fZ * fT;
-		//V0001 (1 - x) (1 - y) (1 - z) t +
-		b += get(ix, iy, iz, iT) * fX * fY * fZ * ft;
-		//V1000 x (1 - y) (1 - z) (1 - t) +
-		b += get(iX, iy, iz, it) * fx * fY * fZ * fT;
-		//V1001 x (1 - y) (1 - z) t +
-		b += get(iX, iy, iz, iT) * fx * fY * fZ * ft;
-		//V0100 (1 - x) y (1 - z) (1 - t) +
-		b += get(ix, iY, iz, it) * fX * fy * fZ * fT;
-		//V0101 (1 - x) y (1 - z) t +
-		b += get(ix, iY, iz, iT) * fX * fy * fZ * ft;
-		//V0010 (1 - x) (1 - y) z (1 - t) +
-		b += get(ix, iy, iZ, it) * fX * fY * fz * fT;
-		//V0011 (1 - x) (1 - y) z t +
-		b += get(ix, iy, iZ, iT) * fX * fY * fz * ft;	
-		//V1010 x (1 - y) z (1 - t) +
-		b += get(iX, iy, iZ, it) * fx * fY * fz * fT;
-		//V1011 x (1 - y) z t +
-		b += get(iX, iy, iZ, iT) * fx * fY * fz * ft;
-		//V0110 (1 - x) y z (1 - t) +
-		b += get(ix, iY, iZ, it) * fX * fy * fz * fT;
-		//V0111 (1 - x) y z t +
-		b += get(ix, iY, iZ, iT) * fX * fy * fz * ft;
-		//V1100 x y (1 - z) (1 - t) +
-		b += get(iX, iY, iz, it) * fx * fy * fZ * fT;
-		//V1101 x y (1 - z) t +
-		b += get(iX, iY, iz, iT) * fx * fy * fZ * ft;
-		//V1110 x y z (1 - t) +
-		b += get(iX, iY, iZ, it) * fx * fy * fz * fT;
-		//V1111 x y z t
-		b += get(iX, iY, iZ, iT) * fx * fy * fz * ft;
-
-		return b;
-	}	
 };
 
-typedef Grid<double> ScalarGrid4d;
 typedef Grid<Vector3f> VectorGrid;
 typedef Grid<float> ScalarGrid;
 /** @}*/
