@@ -11,11 +11,9 @@ namespace crpropa {
 static const double mec2 = mass_electron * c_squared;
 
 EMTripletPairProduction::EMTripletPairProduction(PhotonField photonField,
-												 ScalarGrid4d geometryGrid,
 												 bool haveElectrons,
 												 double limit) {
 	setPhotonField(photonField);
-	this->geometryGrid = geometryGrid;
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
 }
@@ -111,19 +109,7 @@ void EMTripletPairProduction::performInteraction(Candidate *candidate) const {
 	// sample the value of eps
 	Random &random = Random::instance();
 	size_t i = closestIndex(E, tabE);
-
-	// geometric scaling
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
-    double geometricScaling = geometryGrid.interpolate(pos, time);
-    if (geometricScaling == 0.)
-    	return;
-    
-    std::vector<double> tabCDF_geoScaled;
-    for (int j = 0; j < tabCDF[i].size(); ++j) {
-    	tabCDF_geoScaled.push_back(tabCDF[i][j]*geometricScaling);
-    }
-	size_t j = random.randBin(tabCDF_geoScaled);
+	size_t j = random.randBin(tabCDF[i]);
 	double s_kin = pow(10, log10(tabs[j]) + (random.rand() - 0.5) * 0.1);
 	double eps = s_kin / 4 / E; // random background photon energy
 
@@ -155,15 +141,8 @@ void EMTripletPairProduction::process(Candidate *candidate) const {
 	// check if in tabulated energy range
 	if (E < tabEnergy.front() or (E > tabEnergy.back()))
 		return;
-
-	// geometric scaling
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
-	double rate = geometryGrid.interpolate(pos, time);
-	if (rate == 0.)
-		return;
 	
-	rate *= interpolate(E, tabEnergy, tabRate);
+	double rate = interpolate(E, tabEnergy, tabRate);
 	// cosmological scaling of interaction distance (comoving)
 	rate *= pow(1 + z, 2) * photonFieldScaling(photonField, z);
 

@@ -17,11 +17,9 @@ const double PhotoDisintegration::lgmax = 14; // maximum log10(Lorentz-factor)
 const size_t PhotoDisintegration::nlg = 201;  // number of Lorentz-factor steps
 
 PhotoDisintegration::PhotoDisintegration(PhotonField f,
-										 ScalarGrid4d geometryGrid,
 										 bool havePhotons,
 										 double limit) {
 	setPhotonField(f);
-	this->geometryGrid = geometryGrid;
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 }
@@ -177,11 +175,7 @@ void PhotoDisintegration::process(Candidate *candidate) const {
 		if ((lg <= lgmin) or (lg >= lgmax))
 			return;
 
-		// geometrical scaling
-		double rate = geometryGrid.interpolate(pos, time);
-		if (rate == 0)
-			return;
-		rate *= interpolateEquidistant(lg, lgmin, lgmax, pdRate[idx]);
+		double rate = interpolateEquidistant(lg, lgmin, lgmax, pdRate[idx]);
 		rate *= pow(1 + z, 2) * photonFieldScaling(photonField, z); // cosmological scaling, rate per comoving distance
 
 		// check if interaction occurs in this step

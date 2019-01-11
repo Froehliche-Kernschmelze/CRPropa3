@@ -9,11 +9,9 @@
 namespace crpropa {
 
 EMDoublePairProduction::EMDoublePairProduction(PhotonField photonField,
-											   ScalarGrid4d geometryGrid,
 											   bool haveElectrons,
 											   double limit) {
 	setPhotonField(photonField);
-	this->geometryGrid = geometryGrid;
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
 }
@@ -91,14 +89,7 @@ void EMDoublePairProduction::process(Candidate *candidate) const {
 		return;
 
 	// interaction rate
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
-	// geometric scaling
-	double rate = geometryGrid.interpolate(pos, time);
-	if (rate == 0.)
-		return;
-	
-	rate *= interpolate(E, tabEnergy, tabRate);
+	double rate = interpolate(E, tabEnergy, tabRate);
 	rate *= pow(1 + z, 2) * photonFieldScaling(photonField, z);
 
 	// check for interaction

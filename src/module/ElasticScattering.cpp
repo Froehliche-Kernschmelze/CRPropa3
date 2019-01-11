@@ -19,9 +19,8 @@ const double ElasticScattering::epsmin = log10(2 * eV) + 3;    // log10 minimum 
 const double ElasticScattering::epsmax = log10(2 * eV) + 8.12; // log10 maximum photon background energy in nucleus rest frame for elastic scattering
 const size_t ElasticScattering::neps = 513; // number of photon background energies in nucleus rest frame
 
-ElasticScattering::ElasticScattering(PhotonField f, ScalarGrid4d geometryGrid) {
+ElasticScattering::ElasticScattering(PhotonField f) {
 	setPhotonField(f);
-	this->geometryGrid = geometryGrid;
 }
 
 void ElasticScattering::setPhotonField(PhotonField photonField) {
@@ -83,8 +82,6 @@ void ElasticScattering::initCDF(std::string filename) {
 void ElasticScattering::process(Candidate *candidate) const {
 	int id = candidate->current.getId();
 	double z = candidate->getRedshift();
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
 
 	if (not isNucleus(id))
 		return;
@@ -100,12 +97,7 @@ void ElasticScattering::process(Candidate *candidate) const {
 	double step = candidate->getCurrentStep();
 	while (step > 0) {
 
-		// geometric scaling
-		double rate = geometryGrid.interpolate(pos, time);
-		if (rate == 0.)
-			return;
-		
-		rate *= interpolateEquidistant(lg, lgmin, lgmax, tabRate);
+		double rate = interpolateEquidistant(lg, lgmin, lgmax, tabRate);
 		rate *= Z * N / double(A);  // TRK scaling
 		rate *= pow(1 + z, 2) * photonFieldScaling(photonField, z);  // cosmological scaling
 

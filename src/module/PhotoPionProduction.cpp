@@ -20,23 +20,18 @@ namespace crpropa {
 
 
 PhotoPionProduction::PhotoPionProduction( PhotonField field,
-                                          ScalarGrid4d geometryGrid,
                                           bool photons,
                                           bool neutrinos,
                                           bool electrons,
                                           bool antiNucleons,
-                                          bool useTabData,
                                           double l) {
     havePhotons = photons;
     haveNeutrinos = neutrinos;
     haveElectrons = electrons;
     haveAntiNucleons = antiNucleons;
-    useTabulatedData = useTabData;
     limit = l;
     setPhotonField(field);
-    this->geometryGrid = geometryGrid;
     this->phtnfld = Photon_Field(getDataPath("Scaling/" + photonFieldName(field) + ".txt"));
-    if (useTabData) initHistogram(getDataPath("PhotoPionProduction/SOPHIA_histogram.txt"));
 }
 
 
@@ -61,10 +56,6 @@ void PhotoPionProduction::setHaveNeutrinos(bool b) {
 
 void PhotoPionProduction::setHaveAntiNucleons(bool b) {
     haveAntiNucleons = b;
-}
-
-void PhotoPionProduction::setUseTabulatedData(bool b) {
-    useTabulatedData = b;
 }
 
 void PhotoPionProduction::setLimit(double l) {
@@ -107,299 +98,6 @@ void PhotoPionProduction::initRate(std::string filename) {
     infile.close();
 }
 
-/*
-    related to histogram version of SOPHIA:
-        - initHistogram
-        - hashTag
-        - produce
-        - drawEnergy
-        - snapToHalfLog
-        - sophiaEvent
-*/
-
-void PhotoPionProduction::initHistogram(std::string filename) {
-    // read in histogram file
-    hashMap.clear();
-    histData.clear();
-    std::ifstream infile(filename.c_str());
-    if (!infile.good())
-        throw std::runtime_error("PhotoPionProduction: Could not open file " + filename);
-
-    std::string line;
-    while ( std::getline(infile, line) ) {
-        std::istringstream ss(line);
-        std::string hash;
-        ss >> hash;
-        std::vector<double> vec;
-        double n;
-        while (ss >> n) vec.push_back(n);
-        // input.insert({ hash, vec });  // with C++11
-        hashMap.push_back(hash);
-        histData.push_back(vec);
-    }
-    infile.close();
-}
-
-
-std::string PhotoPionProduction::hashTag(int n,     // nucleon type
-                                         double E,  // primary Energy
-                                         double e,  // photon energy
-                                         int ID,    // particle to be produced
-                                         int m = 0  // amount of particles produced in this event
-                                         ) const {
-    // method to generate hash tags for navigation in std::unordered_map
-    std::stringstream hash;
-    int exp = std::floor(log10(E));
-    int pre = E/pow(10, exp);
-    hash << "#" << n << "_" << pre << "e";
-    (exp >= 0)? hash << "+" : hash << "-";
-    if (exp < 10) hash << "0";
-    hash << std::abs(exp) << "_";
-    exp = std::floor(log10(e));
-    pre = e/pow(10, exp);
-    hash << pre << "e";
-    (exp >= 0)? hash << "+" : hash << "-";
-    if (exp < 10) hash << "0";
-    hash << std::abs(exp) << "_" << ID;
-    if (m > 0) hash << "_x" << m;
-    return hash.str();
-}
-
-
-int PhotoPionProduction::produce(const std::vector<double> &particle) const {
-/*
-    - input: probability vector with chances to produce: [0,1,...n] particles
-    - output: number of particles being produced
-*/
-    if (particle.size() == 0)
-        return 0;
-    Random &random = Random::instance();
-    double r = random.rand();
-    int index = 0;
-    while ((r >= 0) && (index < particle.size())) {
-        r -= particle[index];
-        index++;
-    }
-    return index-1;
-}
-
-
-double PhotoPionProduction::drawEnergy(const std::vector<double> &data) const {
-    /*
-        input format: first half of vector contains probabilities to draw
-                      a certain energy contained in the second half
-        output: energy
-    */
-    if (data.size() == 0)
-        return 0.;
-    std::vector<double> p, E;
-    for (int i = 0; i < data.size(); ++i) {
-        p.push_back(data[i]);
-        E.push_back(data[i+data.size()/2]);
-    }
-    int pos = produce(p);
-    if (pos == 0)
-        return E[pos];
-    // interpolation
-    Random &random = Random::instance();
-    double r = random.rand();
-    return E[pos-1]*(1.-r) + r*E[pos];
-}
-
-
-double PhotoPionProduction::snapToHalfLog(double x) const {
-    /*
-        method to aid the hashTag function
-        selects the closest value where histogram data is available
-    */
-    int exp = std::floor(log10(x));
-    double pre = x/pow(10, exp);
-    if (pre == 1.0)
-        return x;
-    double result = pow(10, std::ceil(log10(x)));
-    if (pre < 2.5)
-        return result / 10.;
-    if (pre >= 7.5)
-        return result;
-    return result / 2.;
-}
-
-
-std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton,  // 0=p, 1=n
-                                                     double E,       // primary nucleon's energy / GeV
-                                                     double e        // target photon's energy / eV
-                                                     ) const {
-    /*
-        Histogram version of SOPHIA.
-    */
-    const double nature = 1 - static_cast<int>(onProton);
-    const double E_in = snapToHalfLog(E);
-    const double eps = snapToHalfLog(e);
-    std::vector<double> output;
-    std::string hash;
-    ptrdiff_t whereHash;
-
-    hash = hashTag(nature, E_in, eps, 13);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> proton = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, 14);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> neutron = histData[whereHash];
-
-    // return primary if no histogram for E and e is available
-    if (proton.size() == 0 && neutron.size() == 0) {
-        int id = (onProton)? 13 : 14;
-        output.push_back(id);
-        output.push_back(E_in);
-        return output;
-    }
-
-    hash = hashTag(nature, E_in, eps, 1);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> photon = histData[whereHash];
-    
-    hash = hashTag(nature, E_in, eps, 2);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> positron = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, 3);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> electron = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, -13);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> antiProton = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, -14);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> antiNeutron = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, 15);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> nu_e = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, 16);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> antiNu_e = histData[whereHash];
-
-    hash = hashTag(nature, E_in, eps, 17);
-    whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin();
-    const std::vector<double> nu_mu = histData[whereHash];
-
-    const std::vector<double> antiNu_mu = nu_mu;
-
-// ########################################################
-// ### particle production (without energy)
-// ########################################################
-    const int Le_in = 0;
-    const int charge_in = 1 - nature;
-    const int Nnuc_in = 1;
-
-    int Le = 0, charge = 0, Nnuc = 0;
-    int N_electron = 0, N_positron = 0,
-        N_antiNu_e = 0, N_nu_e = 0,
-        N_proton = 0, N_neutron = 0,
-        N_antiProton = 0, N_antiNeutron = 0,
-        N_photon = 0, N_nu_mu = 0, N_antiNu_mu = 0;
-
-    // looped particle production (preserves quantum numbers)
-    do {  // lepton loop
-        do {  // charge loop
-            do {  // nucleon loop
-                // reset particles for new production loop
-                Le = 0;
-                charge = 0;
-                Nnuc = 0;
-                N_electron = 0;
-                N_positron = 0;
-                N_antiNu_e = 0;
-                N_nu_e = 0;
-                N_proton = 0;
-                N_neutron = 0;
-                N_antiProton = 0;
-                N_antiNeutron = 0;
-
-                N_proton += produce(proton);
-                charge += N_proton;
-                Nnuc += N_proton;
-
-                N_neutron += produce(neutron);
-                Nnuc += N_neutron;
-
-                N_nu_e += produce(nu_e);
-                Le += N_nu_e;
-
-                N_antiNu_e += produce(antiNu_e);
-                Le -= N_antiNu_e;
-
-                N_electron += produce(electron);
-                charge -= N_electron;
-                Le += N_electron;
-
-                N_positron += produce(positron);
-                charge += N_positron;
-                Le -= N_positron;
-
-                N_antiProton += produce(antiProton);
-                charge -= N_antiProton;
-                Nnuc -= N_antiProton;
-
-                N_antiNeutron += produce(antiNeutron);
-                Nnuc -= N_antiNeutron;
-            } while ( Nnuc != Nnuc_in );
-        } while ( charge != charge_in );
-    } while ( Le != Le_in );
-    do {
-        N_nu_mu = 0;
-        N_antiNu_mu = 0;
-        N_nu_mu += produce(nu_mu);
-        N_antiNu_mu += N_nu_mu;  // antiNu_mu equals nu_mu
-    } while ( N_nu_mu != (N_nu_e + N_antiNu_e) );
-
-    // experimental setup
-    // N_nu_mu = N_nu_e + N_antiNu_e;
-    // N_antiNu_mu = N_nu_mu;  // antiNu_mu equals nu_mu
-    
-    N_photon = produce(photon);
-
-    // std::cout << "[" << N_electron << "e-," << N_positron << "e+," << N_nu_e << "ne," << N_antiNu_e << "~ne," << N_proton << "p,"
-    //           << N_neutron << "n," << N_nu_mu << "nm," << N_antiNu_mu << "~nm,"
-    //           << N_photon << "ph," << N_antiProton << "~p," << N_antiNeutron << "~n]@["
-    //           << Le << "L," << charge << "C," << Nnuc << "N] " << std::endl;
-
-// ########################################################
-// ### draw energy of produced particles
-// ########################################################
-    double availableEnergy = E;
-    std::vector<double> outE;
-    double E_part;
-    const int pCount[] = {N_antiNeutron, N_antiProton, N_photon,
-                          N_positron, N_electron, N_proton,
-                          N_neutron, N_nu_e, N_antiNu_e,
-                          N_nu_mu, N_antiNu_mu};
-    const int partID[] = {-14, -13, 1, 2, 3, 13, 14, 15, 16, 17, 18};
-    for (int j = 0; j < 11; ++j) {
-        for (int k = 0; k < pCount[j]; ++k) {
-            output.push_back(partID[j]);
-            int id = (partID[j] == 18)? 17 : partID[j];  // ~nu_mu=nu_mu
-            hash = hashTag(nature, E_in, eps, id, pCount[j]);
-            whereHash = std::find(hashMap.begin(), hashMap.end(), hash) - hashMap.begin(); 
-            E_part = drawEnergy(histData[whereHash]);
-            availableEnergy -= E_part;
-            outE.push_back(E_part);
-        }
-    }
-    // preserve energy
-    double weight = E / (E - availableEnergy);
-    int nOutPart = output.size();
-    for (int j = 0; j < nOutPart; ++j) {
-        output.push_back(outE[j]*weight);
-    }
-    return output;
-}
-
-
 double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton, Vector3d pos, double time) const {
     const std::vector<double> &tabRate = (onProton)? tabProtonRate : tabNeutronRate;
 
@@ -408,12 +106,7 @@ double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton, Ve
     if (gamma < tabLorentz.front() or (gamma > tabLorentz.back()))
         return std::numeric_limits<double>::max();
 
-    // geometric scaling
-    double rate = geometryGrid.interpolate(pos, time);
-    if (rate == 0.)
-        return std::numeric_limits<double>::max();
-
-    rate *= interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
+    double rate = interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
 
     // cosmological scaling
     rate *= pow(1 + z, 2);
@@ -506,18 +199,9 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     int outPartID[2000];
     int nOutPart;
 
-    if (useTabulatedData) {
-        std::vector<double> outVec = sophiaEvent(onProton, Ein, eps);
-        nOutPart = outVec.size() / 2;
-        for (int i = 0; i < nOutPart; ++i) {
-            outPartID[i] = outVec[i];
-            outputEnergy[i] = outVec[i+nOutPart];
-        }
-    } else {
-        #pragma omp critical
-        {
-            sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
-        }
+    #pragma omp critical
+    {
+        sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
     }
 
     // output particle treatment

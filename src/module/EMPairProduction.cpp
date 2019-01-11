@@ -12,12 +12,10 @@ namespace crpropa {
 static const double mec2 = mass_electron * c_squared;
 
 EMPairProduction::EMPairProduction(PhotonField photonField,
-								   ScalarGrid4d geometryGrid,
 								   bool haveElectrons,
 								   double limit) : haveElectrons(haveElectrons), 
 												   limit(limit) {
 	setPhotonField(photonField);
-	this->geometryGrid = geometryGrid;
 }
 
 void EMPairProduction::setPhotonField(PhotonField photonField) {
@@ -186,19 +184,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	// sample the value of s
 	Random &random = Random::instance();
 	size_t i = closestIndex(E, tabE);  // find closest tabulation point
-
-	// geometric scaling
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
-    double geometricScaling = geometryGrid.interpolate(pos, time);
-    if (geometricScaling == 0.)
-    	return;
-
-    std::vector<double> tabCDF_geoScaled;
-    for (int j = 0; j < tabCDF[i].size(); ++j) {
-    	tabCDF_geoScaled.push_back(tabCDF[i][j]*geometricScaling);
-    }
-	size_t j = random.randBin(tabCDF_geoScaled);
+	size_t j = random.randBin(tabCDF[i]);
 	double lo = std::max(4 * mec2 * mec2, tabs[j-1]);  // first s-tabulation point below min(s_kin) = (2 me c^2)^2; ensure physical value
 	double hi = tabs[j];
 	double s = lo + random.rand() * (hi - lo);
@@ -209,7 +195,7 @@ void EMPairProduction::performInteraction(Candidate *candidate) const {
 	double Ep = E - Ee;
 
 	// sample random position along current step
-	pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
+	Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	candidate->addSecondary(-11, Ee / (1 + z), pos);
 	candidate->addSecondary(11, Ep / (1 + z), pos);
 }
@@ -228,13 +214,7 @@ void EMPairProduction::process(Candidate *candidate) const {
 		return;
 
 	// interaction rate
-	// geometric scaling
-	Vector3d pos = candidate->current.getPosition();
-    double time = candidate->getTrajectoryLength()/c_light;
-	double rate = geometryGrid.interpolate(pos, time);
-    if (rate == 0.)
-        return;
-	rate *= interpolate(E, tabEnergy, tabRate);
+	double rate = interpolate(E, tabEnergy, tabRate);
 	rate *= pow(1 + z, 2) * photonFieldScaling(photonField, z);
 
 	// check for interaction

@@ -11,12 +11,9 @@
 namespace crpropa {
 
 ElectronPairProduction::ElectronPairProduction(PhotonField photonField,
-											   ScalarGrid4d geometryGrid,
 											   bool haveElectrons,
 											   double limit) {
 	setPhotonField(photonField);
-	this->geometryGrid = geometryGrid;
-	geometryGrid.setOrigin(-0.5*geometryGrid.getSpacing());  // correct for in-middle-of-box convention in CRPropa
 	this->haveElectrons = haveElectrons;
 	this->limit = limit;
 }
@@ -81,7 +78,7 @@ void ElectronPairProduction::initSpectrum(std::string filename) {
 	infile.close();
 }
 
-double ElectronPairProduction::lossLength(int id, double lf, double z, Vector3d pos, double time) const {
+double ElectronPairProduction::lossLength(int id, double lf, double z) const {
 	double Z = chargeNumber(id);
 	if (Z == 0)
 		return std::numeric_limits<double>::max(); // no pair production on uncharged particles
@@ -89,11 +86,7 @@ double ElectronPairProduction::lossLength(int id, double lf, double z, Vector3d 
 	if (lf < tabLorentzFactor.front())
 		return std::numeric_limits<double>::max(); // below energy threshold
 
-	// geometric scaling
-	double rate = geometryGrid.interpolate(pos, time);
-	if (rate == 0.)
-		return std::numeric_limits<double>::max();
-
+	double rate;
 	if (lf < tabLorentzFactor.back())
 		rate = interpolate(lf, tabLorentzFactor, tabLossRate); // interpolation
 	else
@@ -112,10 +105,8 @@ void ElectronPairProduction::process(Candidate *c) const {
 
 	double lf = c->current.getLorentzFactor();
 	double z = c->getRedshift();
-	Vector3d pos = c->current.getPosition();
-    double time = c->getTrajectoryLength()/c_light;
 
-	double losslen = lossLength(id, lf, z, pos, time);  // energy loss length
+	double losslen = lossLength(id, lf, z);  // energy loss length
 	// check if interaction does not happen
 	if (losslen >= std::numeric_limits<double>::max())
 		return;
