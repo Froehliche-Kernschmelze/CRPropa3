@@ -48,10 +48,29 @@ std::string photonFieldName(PhotonField photonField);
 // custom photon field methods
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/** 
+ @class Photon_Field
+ @brief Handler class for photon fields. Provides the sample_eps method.
+
+ sample_eps draws a photon from a given photon background. This method 
+ and all methods it depends on have been taken from the SOPHIA code.
+ */
 class Photon_Field {
  public:
+    /** Constructor for photon field data
+     @param fieldPath  path/to/photonField.txt
+     */
     explicit Photon_Field(std::string fieldPath);
+
+    /* Empty constructor to easy initialization in some modules
+     */
     Photon_Field();
+
+    /** Draws a photon from the photon background
+     @param onProton  Primary particle type. true=proton, false=neutron
+     @param E_in      Energy of the primary in GeV
+     @param z_in      Redshift of primary
+     */
     double sample_eps(bool onProton, double E_in, double z_in) const;
 
  private:
