@@ -119,7 +119,7 @@ double PhotoPionProduction::nucleonMFP(double gamma, double z, bool onProton) co
         return std::numeric_limits<double>::max();
 
     double rate = interpolate2d(z, gamma, tabRedshifts, tabLorentz, tabRate);
-    // std::cout <<  int(onProton) << " " << z << " " << gamma << " " << rate << " | ";
+    
     // cosmological scaling
     rate *= pow(1 + z, 2);
 
@@ -175,7 +175,7 @@ void PhotoPionProduction::process(Candidate *candidate) const {
         // check if interaction does not happen
         if ( meanFreePath == std::numeric_limits<double>::max())
             return;
-        // std::cout << step << " : " << meanFreePath << std::endl;
+        
         if (step < randDistance) {
             if (totalRate > 0.)
                 candidate->limitNextStep(limit / totalRate);
@@ -209,7 +209,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     double outputEnergy[2000];
     int outPartID[2000];
     int nOutPart;
-    std::cout << int(onProton) << " : " << Ein << " : " << eps << std::endl;
+    
     #pragma omp critical
     {
         sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
