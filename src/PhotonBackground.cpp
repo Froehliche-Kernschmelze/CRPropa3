@@ -147,8 +147,9 @@ double Photon_Field::sample_eps(bool onProton, double E_in, double z_in) const {
     - samples distribution of n(epsilon)/epsilon^2
 */ 
     const double mass = onProton? 0.93827 : 0.93947;  // Gev/c^2
+    const double z_min = redshift[0];
     const double z_max = redshift[redshift.size()-1];
-    if (z_in > z_max)
+    if ( (z_in < z_min) || (z_in > z_max) )
         return 0.;
     double z_pos;
     double smallestDiff = z_max;
