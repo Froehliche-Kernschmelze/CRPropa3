@@ -300,10 +300,6 @@
 %template(ScalarGridRefPtr) crpropa::ref_ptr<crpropa::Grid<float> >;
 %template(ScalarGrid) crpropa::Grid<float>;
 
-%implicitconv crpropa::ref_ptr<crpropa::Grid<double> >;
-%template(ScalarGrid4dRefPtr) crpropa::ref_ptr<crpropa::Grid<double> >;
-%template(ScalarGrid4d) crpropa::Grid<double>;
-
 %include "crpropa/EmissionMap.h"
 %implicitconv crpropa::ref_ptr<crpropa::EmissionMap>;
 %template(EmissionMapRefPtr) crpropa::ref_ptr<crpropa::EmissionMap>;

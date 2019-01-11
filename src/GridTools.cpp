@@ -411,33 +411,6 @@ void dumpGrid(ref_ptr<ScalarGrid> grid, std::string filename, double c) {
 	fout.close();
 }
 
-void loadGridFromTxt(ref_ptr<ScalarGrid4d> grid, std::string filename, double c) {
-	std::ifstream fin(filename.c_str());
-	if (!fin) {
-		std::stringstream ss;
-		ss << "load ScalarGrid4d: " << filename << " not found";
-		throw std::runtime_error(ss.str());
-	}
-	// skip header lines
-	while (fin.peek() == '#')
-		fin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-	for (int ix = 0; ix < grid->getNx(); ix++) {
-		for (int iy = 0; iy < grid->getNy(); iy++) {
-			for (int iz = 0; iz < grid->getNz(); iz++) {
-				for (int it = 0; it < grid->getNt(); it++) {	
-					double &b = grid->get(ix,iy,iz,it);
-					fin >> b;
-					b *= c;
-					if (fin.eof())
-						throw std::runtime_error("load ScalarGrid4d: file too short");
-				}
-			}
-		}
-	}
-	fin.close();
-}
-
 void loadGridFromTxt(ref_ptr<VectorGrid> grid, std::string filename, double c) {
 	std::ifstream fin(filename.c_str());
 	if (!fin) {
