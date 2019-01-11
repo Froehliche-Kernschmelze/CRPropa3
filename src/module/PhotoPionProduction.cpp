@@ -162,7 +162,7 @@ void PhotoPionProduction::process(Candidate *candidate) const {
         // check if interaction does not happen
         if ( meanFreePath == std::numeric_limits<double>::max())
             return;
-        std::cout << step << " : " << randDistance << std::endl;
+        std::cout << step << " : " << meanFreePath << std::endl;
         if (step < randDistance) {
             if (totalRate > 0.)
                 candidate->limitNextStep(limit / totalRate);
