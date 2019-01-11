@@ -186,7 +186,7 @@ double Photon_Field::sample_eps(bool onProton, double E_in, double z_in) const {
         peps = prob_eps(eps, onProton, E_in, z_pos)/cnorm;
     } while (random.rand()*pMax > peps);
     return eps;
-}  // end sample_eps
+}
 
 
 void Photon_Field::init(std::string filename) {
@@ -197,17 +197,23 @@ void Photon_Field::init(std::string filename) {
     std::string line;
     int i = 0;
     while ( std::getline(infile, line) ) {
-        if (line.find('#') == 0 ) continue;
+        if (line.find('#') == 0 )
+            continue;
         std::istringstream ss(line);
         std::vector<double> vec;
         double n;
-        while (ss >> n) vec.push_back(n);
-        if (i == 0) { energy = vec; i++; continue; }
-        if (i == 1) { redshift = vec; i++; continue; }
+        while (ss >> n)
+            vec.push_back(n);
+        if (i == 0) {
+            energy = vec; i++; continue;
+        }
+        if (i == 1) {
+            redshift = vec; i++; continue;
+        }
         dn_deps.push_back(vec);
     }
     infile.close();
-}  // end init
+}
 
 
 double Photon_Field::prob_eps(double eps, bool onProton, double E_in, int z_pos) const {
@@ -228,7 +234,7 @@ double Photon_Field::prob_eps(double eps, bool onProton, double E_in, int z_pos)
         double sintegr = gaussInt("functs", smin, smax, onProton, E_in, z_pos);
         return photonDensity/eps/eps*sintegr/8./beta/E_in/E_in*1.e18*1.e6;
     }
-}  // end prob_eps
+}
 
 
 double Photon_Field::get_photonDensity(double eps, int z_pos) const {
@@ -259,7 +265,7 @@ double Photon_Field::get_photonDensity(double eps, int z_pos) const {
         return (1.-rho)*dn_deps[closestPos-1][z_pos]
                + rho*dn_deps[closestPos][z_pos];
     }
-}  // end get_photonDensity
+}
 
 
 double Photon_Field::crossection(double x, bool onProton) const {
@@ -271,7 +277,8 @@ double Photon_Field::crossection(double x, bool onProton) const {
     const double mass = onProton? 0.93827 : 0.93947;  // Gev/c^2
     double sth = 1.1646;
     double s = mass*mass + 2.*mass*x;
-    if (s < sth) { return 0.; }
+    if (s < sth)
+        return 0.;
     double cross_res = 0.;
     double cross_dir = 0.;
     double cross_dir1 = 0.;
@@ -290,7 +297,6 @@ double Photon_Field::crossection(double x, bool onProton) const {
                                 1., .5, 1., .5, .5, 1.5, 1., 1.5, 2.};
     const double AM2[2] = { 0.882792, 0.880351 };
 
-    // int idx = (onProton == 0)? 9:0;  // neutron = 0, proton = 1
     int idx = onProton? 0:9;  // neutron = 0, proton = 1
     double SIG0[9];
     for (int i = 0; i < 9; ++i) {
@@ -308,13 +314,13 @@ double Photon_Field::crossection(double x, bool onProton) const {
         }
         // direct channel
         if ( (x > 0.1) && (x < 0.6) ) {
-            cross_dir1 = singleback(x)
+            cross_dir1 = 92.7 * Pl(x, .152, .25, 2.)  // single pion production
                        + 40.*std::exp(-(x-0.29)*(x-0.29) / 0.002)
                        - 15.*std::exp(-(x-0.37)*(x-0.37) / 0.002);
         } else {
-            cross_dir1 = singleback(x);
+            cross_dir1 = 92.7 * Pl(x, .152, .25, 2.);  // single pion production
         }
-        cross_dir2 = twoback(x);
+        cross_dir2 = 37.7 * Pl(x, .4, .6, 2.);  // double pion production
         cross_dir = cross_dir1 + cross_dir2;
     }
     // fragmentation 2:
@@ -368,30 +374,29 @@ double Photon_Field::crossection(double x, bool onProton) const {
         cs_multidiff = 0.;
         cs_multi = 0.;
     }
-    // in the original SOPHIA code, this is a switch.
-    // Here, only one case (NDIR=3) is needed.
     return cross_res+cross_dir+cs_multidiff+cross_frag2;
-}  // end crossection
+}
 
 
 double Photon_Field::Pl(double x, double xth, double xmax, double alpha) const {
 /*
-    - input: photon energy [eV], unknown, unknown, unknown
-    - output: unknown.
+    - input: photon energy [eV], threshold photon energy, max photon energy, unknown (dimensionless)
+    - output: unknown (dimensionless)
     - called by: crossection
 */
-    if (xth > x) { return 0.; }
+    if (xth > x)
+        return 0.;
     double a = alpha*xmax/xth;
     double prod1 = std::pow((x-xth)/(xmax-xth), (a-alpha));
     double prod2 = std::pow(x/xmax, -a);
     return prod1*prod2;
-}  // end Pl
+}
 
 
 double Photon_Field::Ef(double x, double th, double w) const {
 /*
-    - input: photon energy [eV], unknown, unknown
-    - output: unknown
+    - input: photon energy [eV], threshold photon energy, unknown threshold
+    - output: unknown (dimensionless)
     - called by: crossection
 */
     double wth = w+th;
@@ -402,9 +407,9 @@ double Photon_Field::Ef(double x, double th, double w) const {
     } else if (x >= wth) {
         return 1.;
     } else {
-        throw std::runtime_error("error in function Ef");
+        throw std::runtime_error("PhotonBackground: Error in function Ef");
     }
-}  // end Ef
+}
 
 
 double Photon_Field::breitwigner(double sigma_0, double Gamma, double DMM, double eps_prime, bool onProton) const {
@@ -418,25 +423,7 @@ double Photon_Field::breitwigner(double sigma_0, double Gamma, double DMM, doubl
     double gam2s = Gamma*Gamma*s;
     return sigma_0 * (s/eps_prime/eps_prime)*gam2s
                    / ((s-DMM*DMM)*(s-DMM*DMM)+gam2s);
-}  // end breitwigner
-
-
-double Photon_Field::singleback(double x) const {
-/*
-    - single pion channel
-    - called by: crossection
-*/    
-    return 92.7 * Pl(x, .152, .25, 2.);
-}  // end singleback
-
-
-double Photon_Field::twoback(double x) const {
-/*
-    - two pion production
-    - called by: crossection
-*/
-    return 37.7 * Pl(x, .4, .6, 2.);
-}  // end twoback
+}
 
 
 double Photon_Field::functs(double s, bool onProton) const {
@@ -450,7 +437,7 @@ double Photon_Field::functs(double s, bool onProton) const {
     double epsprime = factor/2./mass;
     double sigma_pg = crossection(epsprime, onProton);
     return factor*sigma_pg;
-}  // end functs
+}
 
 
 double Photon_Field::gaussInt(std::string type, double A, double B, bool onProton, double E_in, int z_pos) const {
@@ -478,6 +465,6 @@ double Photon_Field::gaussInt(std::string type, double A, double B, bool onProto
         }
     }
     return XR*SS;
-}  // end gaussInt
+}
 
 } // namespace crpropa
