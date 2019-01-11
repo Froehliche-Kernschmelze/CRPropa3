@@ -48,7 +48,7 @@ public:
 	void setHaveAntiNucleons(bool b);
 	void setLimit(double limit);
 	void initRate(std::string filename);
-	double nucleonMFP(double gamma, double z, bool onProton, Vector3d pos, double time) const;
+	double nucleonMFP(double gamma, double z, bool onProton) const;
 	double nucleiModification(int A, int X) const;
 	void process(Candidate *candidate) const;
 	void performInteraction(Candidate *candidate, bool onProton) const;
