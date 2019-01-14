@@ -53,7 +53,7 @@ std::string photonFieldName(PhotonField photonField);
  @brief Handler class for photon fields. Provides the sample_eps method.
 
  sample_eps draws a photon from a given photon background. This method 
- and all methods it depends on have been taken from the SOPHIA code.
+ and all methods it depends on have been inspired by the SOPHIA code.
  */
 class Photon_Field {
  public:
@@ -67,11 +67,9 @@ class Photon_Field {
     Photon_Field();
 
     /** Draws a photon from the photon background
-     @param onProton  Primary particle type. true=proton, false=neutron
-     @param E_in      Energy of the primary in GeV
      @param z_in      Redshift of primary
      */
-    double sample_eps(bool onProton, double E_in, double z_in) const;
+    double sample_eps(double z_in) const;
 
  private:
     void init(std::string fieldPath);
@@ -79,13 +77,6 @@ class Photon_Field {
         std::vector< std::vector<double> > dn_deps;
         std::vector<double> redshift;
     double get_photonDensity(double eps, int z_pos) const;
-    double gaussInt(std::string type, double lowerLimit, double upperLimit, bool onProton, double E_in, int z_pos) const;
-    double functs(double s, bool onProton) const;
-    double prob_eps(double eps, bool onProton, double E_in, int z_pos) const;
-    double crossection(double eps, bool onProton) const;
-        double Pl(double eps, double eps_threshold, double eps_max, double weight) const;
-        double Ef(double eps, double eps_threshold, double threshold) const;
-        double breitwigner(double xsection, double width, double m_resonance, double eps, bool onProton) const;
 };
 
 /** @}*/
