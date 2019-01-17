@@ -70,6 +70,7 @@ class Photon_Field {
      @param z_in      Redshift of primary
      */
     double sample_eps(double z_in) const;
+    // double sample_eps(bool onProton, double E_in, double z_in) const;
 
  private:
     void init(std::string fieldPath);
@@ -77,6 +78,16 @@ class Photon_Field {
         std::vector< std::vector<double> > dn_deps;
         std::vector<double> redshift;
     double get_photonDensity(double eps, int z_pos) const;
+
+    // double gaussInt(std::string type, double lowerLimit, double upperLimit, bool onProton, double E_in, int z_pos) const;
+    // double functs(double s, bool onProton) const;
+    // double prob_eps(double eps, bool onProton, double E_in, int z_pos) const;
+    // double crossection(double eps, bool onProton) const;
+    //     double Pl(double, double, double, double) const;
+    //     double Ef(double, double, double) const;
+    //     double breitwigner(double, double, double, double, bool onProton) const;
+    //     double singleback(double) const;
+    //     double twoback(double) const;
 };
 
 /** @}*/
