@@ -205,6 +205,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     double Ein = EpA / GeV;
     double eps = phtnfld.sample_eps(z);
     // double eps = phtnfld.sample_eps(onProton, Ein, z);
+    // std::cout << eps << std::endl;
 
     // SOPHIA - output:
     double outputEnergy[2000];

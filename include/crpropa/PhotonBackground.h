@@ -69,8 +69,8 @@ class Photon_Field {
     /** Draws a photon from the photon background
      @param z_in      Redshift of primary
      */
-    // double sample_eps(double z_in) const;
-    double sample_eps(bool onProton, double E_in, double z_in) const;
+    double sample_eps(double z_in) const;
+    // double sample_eps(bool onProton, double E_in, double z_in) const;
 
  private:
     void init(std::string fieldPath);
