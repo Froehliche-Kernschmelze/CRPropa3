@@ -73,19 +73,6 @@ void PhotoPionProduction::initRate(std::string filename) {
         throw std::runtime_error("PhotoPionProduction: could not open file " + filename);
 
     double zOld = -1, aOld = -1;
-    // while (infile.good()) {
-    //     if (infile.peek() == '#') {
-    //         infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    //         continue;
-    //     }
-    //     double a, b, c;
-    //     infile >> a >> b >> c;
-    //     if (!infile)
-    //         break;
-    //     tabLorentz.push_back(pow(10, a));
-    //     tabProtonRate.push_back(b / Mpc);
-    //     tabNeutronRate.push_back(c / Mpc);
-    // }
     while (infile.good()) {
         if (infile.peek() == '#') {
             infile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
