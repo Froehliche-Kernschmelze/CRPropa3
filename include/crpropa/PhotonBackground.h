@@ -67,27 +67,36 @@ class Photon_Field {
     Photon_Field();
 
     /** Draws a photon from the photon background
-     @param z_in      Redshift of primary
+     @param onProton  true=proton, false=neutron
+     @param E_in      energy of primary
+     @param z_in      redshift of primary
      */
-    double sample_eps(double z_in) const;
-    // double sample_eps(bool onProton, double E_in, double z_in) const;
+    double sample_eps(bool onProton, double E_in, double z_in) const;
+
+    /** Returns the photon field density in 1/(cm³eV).
+        Multiply by h*nu for physical photon density.
+     @param eps   photon energy in eV
+     @param z_in  redshift
+    */
+    double get_photonDensity(double eps, double z) const;
+
+    /** Returns the crossection of p-gamma interaction in µbarn
+     @param eps       photon energy in eV
+     @param onProton  true=proton, false=neutron
+    */
+    double crossection(double eps, bool onProton) const;
 
  private:
+    double prob_eps(double eps, bool onProton, double E_in, double z_in) const;
+    double Pl(double x, double xth, double xmax, double alpha) const;
+    double Ef(double x, double th, double w) const;
+    double breitwigner(double sigma_0, double Gamma, double DMM, double epsPrime, bool onProton) const;
+    double gaussInt(std::string type, double lowerLimit, double upperLimit, bool onProton, double E_in, double z_in) const;
+    double functs(double s, bool onProton) const;
     void init(std::string fieldPath);
         std::vector<double> energy;
-        std::vector< std::vector<double> > dn_deps;
         std::vector<double> redshift;
-    double get_photonDensity(double eps, int z_pos) const;
-
-    // double gaussInt(std::string type, double lowerLimit, double upperLimit, bool onProton, double E_in, int z_pos) const;
-    // double functs(double s, bool onProton) const;
-    // double prob_eps(double eps, bool onProton, double E_in, int z_pos) const;
-    // double crossection(double eps, bool onProton) const;
-    //     double Pl(double, double, double, double) const;
-    //     double Ef(double, double, double) const;
-    //     double breitwigner(double, double, double, double, bool onProton) const;
-    //     double singleback(double) const;
-    //     double twoback(double) const;
+        std::vector<double> photonDensity;
 };
 
 /** @}*/
