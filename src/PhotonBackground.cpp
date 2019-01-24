@@ -239,13 +239,6 @@ double Photon_Field::get_photonDensity(double eps, double z_in) const {
     - output: dn_deps(e,z) [#/(eV cm^3)] from input file
     - called by: sample_eps
 */
-    // return 1.318e13*eps*eps / (std::exp(eps/(8.619e-5*2.73)) - 1.);
-    // std::vector<double> dens;
-    // for (int i = 0; i < energy.size(); ++i) {
-    //     dens.push_back(dn_deps[i][z_pos]);
-    // }
-    // return interpolate(eps, energy, dens);
-    // return interpolatePrimitive(eps, energy, dens);
     return interpolate2d(eps, z_in, energy, redshift, photonDensity);
 }  // end get_photonDensity
 
