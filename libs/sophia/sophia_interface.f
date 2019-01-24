@@ -9240,7 +9240,8 @@ c OutPart,OutPartType,NbOutPart = output data:
 c        P(2000,5) list of 4-momenta + masses of output particles
 c        LList(2000) list of output particle IDs
 c        NP nb of output particles
-C Removed Jun. 2018 : All eps-sampling and photon fields because this is bullshit.
+C Removed Jun. 2018 : All eps-sampling and photon fields as this
+C                     is now done from the outside
 c**********************************
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       IMPLICIT INTEGER (I-N)
