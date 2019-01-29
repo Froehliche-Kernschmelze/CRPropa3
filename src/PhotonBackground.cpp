@@ -227,7 +227,7 @@ double Photon_Field::prob_eps(double eps, bool onProton, double E_in, double z_i
     } else {
         double smin = 1.1646;  // head-on collision
         double smax = std::max(smin, mass*mass+2.*eps/1.e9*E_in*(1.+beta));
-        double sintegr = gaussInt("functs", smin, smax, onProton, E_in, z_in);
+        double sintegr = gaussInt(smin, smax, onProton);
         return photonDensity/eps/eps*sintegr/8./beta/E_in/E_in*1.e18*1.e6;
     }
 }  // end prob_eps
@@ -260,8 +260,8 @@ double Photon_Field::crossection(double x, bool onProton) const {
     double cross_dir2 = 0.;
     double sig_res[9];
 
-    // upper: ppppppppp
-    // lower: nnnnnnnnn
+    // upper: proton resonance masses
+    // lower: neutron resonance masses
     const double AMRES[18] = { 1.231, 1.440, 1.515, 1.525, 1.675, 1.680, 1.690, 1.895, 1.950,
                                1.231, 1.440, 1.515, 1.525, 1.675, 1.675, 1.690, 1.895, 1.950 };
     const double BGAMMA[18] = { 5.6, .5, 4.6, 2.5, 1., 2.1, 2., .2, 1.,
@@ -349,8 +349,6 @@ double Photon_Field::crossection(double x, bool onProton) const {
         cs_multidiff = 0.;
         cs_multi = 0.;
     }
-    // in the original SOPHIA code, this is a switch.
-    // Here, only one case (NDIR=3) is needed.
     return cross_res+cross_dir+cs_multidiff+cross_frag2;
 }  // end crossection
 
@@ -421,10 +419,9 @@ double Photon_Field::functs(double s, bool onProton) const {
 }  // end functs
 
 
-double Photon_Field::gaussInt(std::string type, double A, double B, bool onProton, double E_in, double z_in) const {
+double Photon_Field::gaussInt(double A, double B, bool onProton) const {
 /* 
-    - input:  type: specifier of function over which to integrate,
-              integration limits A and B
+    - input: integration limits A and B
     - output: 8-points Gauß-Legendre integral
     - called by: sample_eps, prob_eps
 */
@@ -437,13 +434,7 @@ double Photon_Field::gaussInt(std::string type, double A, double B, bool onProto
     double SS = 0.;
     for (int i = 0; i < 8; ++i) {
         double DX = XR*X[i];
-        if (type == "functs") {
-            SS += W[i] * (functs(XM+DX, onProton) + functs(XM-DX, onProton));
-        } else if (type == "prob_eps") {
-            SS += W[i] * (prob_eps(XM+DX, onProton, E_in, z_in) + prob_eps(XM-DX, onProton, E_in, z_in));
-        } else {
-            throw std::runtime_error("gaussInt: type incorrectly specified");
-        }
+        SS += W[i] * (functs(XM+DX, onProton) + functs(XM-DX, onProton));
     }
     return XR*SS;
 }  // end gaussInt

@@ -91,7 +91,7 @@ class Photon_Field {
     double Pl(double x, double xth, double xmax, double alpha) const;
     double Ef(double x, double th, double w) const;
     double breitwigner(double sigma_0, double Gamma, double DMM, double epsPrime, bool onProton) const;
-    double gaussInt(std::string type, double lowerLimit, double upperLimit, bool onProton, double E_in, double z_in) const;
+    double gaussInt(double lowerLimit, double upperLimit, bool onProton) const;
     double functs(double s, bool onProton) const;
     void init(std::string fieldPath);
         std::vector<double> energy;
