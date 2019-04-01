@@ -125,6 +125,11 @@ add_subdirectory(libs/sophia)
 list(APPEND CRPROPA_EXTRA_LIBRARIES sophia gfortran)
 list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophia)
 
+# SOPHIAmod (provided)
+add_subdirectory(libs/sophiaMod)
+list(APPEND CRPROPA_EXTRA_LIBRARIES sophiaMod gfortran)
+list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophiaMod)
+
 # DINT (provided)
 add_subdirectory(libs/dint)
 list(APPEND CRPROPA_EXTRA_LIBRARIES dint)
@@ -360,6 +365,7 @@ add_library(crpropa SHARED
 	src/module/ParticleCollector.cpp
 	src/module/PhotoDisintegration.cpp
 	src/module/PhotoPionProduction.cpp
+	src/module/PhotoPionProductionMod.cpp
 	src/module/PhotonEleCa.cpp
 	src/module/PhotonOutput1D.cpp
 	src/module/PropagationCK.cpp
