@@ -3,6 +3,7 @@
 #include "crpropa/massDistribution/Ferriere.h"
 #include "crpropa/massDistribution/Nakanishi.h"
 #include "crpropa/massDistribution/ConstantDensity.h"
+#include "crpropa/massDistribution/CMZDensity.h"
 #include "crpropa/Units.h"
 
 #include "gtest/gtest.h"

@@ -401,6 +401,7 @@
 %include "crpropa/module/TextOutput.h"
 
 %include "crpropa/module/HDF5Output.h"
+%include "crpropa/module/HadronicInteraction.h"
 %include "crpropa/module/OutputShell.h"
 %include "crpropa/module/EMCascade.h"
 %include "crpropa/module/PhotonEleCa.h"

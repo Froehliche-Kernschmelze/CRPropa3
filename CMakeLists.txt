@@ -357,6 +357,7 @@ add_library(crpropa SHARED
 	src/module/EMTripletPairProduction.cpp
 	src/module/ElasticScattering.cpp
 	src/module/ElectronPairProduction.cpp
+    src/module/HadronicInteraction.cpp
 	src/module/HDF5Output.cpp
 	src/module/NuclearDecay.cpp
 	src/module/Observer.cpp
@@ -377,7 +378,8 @@ add_library(crpropa SHARED
 	src/module/TextOutput.cpp
 	src/module/AdiabaticCooling.cpp
 	src/module/Tools.cpp
-	src/magneticField/JF12Field.cpp
+    src/massDistribution/CMZDensity.cpp
+    src/magneticField/JF12Field.cpp
 	src/magneticField/JF12FieldSolenoidal.cpp
 	src/magneticField/MagneticField.cpp
 	src/magneticField/MagneticFieldGrid.cpp
