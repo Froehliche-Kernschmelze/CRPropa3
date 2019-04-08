@@ -16838,7 +16838,7 @@ c      betap = sqrt(1.D0-1.D0/gammap/gammap)
          OutPartType(i)=LLIST(i)
       end do
       NbOutPart=NP
-
+      print*, "mod"
       return
       end
 
