@@ -347,7 +347,7 @@ double PhotoPionProductionMod::lossLength(int id, double gamma, double z) {
 	return 1. / lossRate;
 }
 
-std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, double z) const {
+std::vector<double> PhotoPionProductionMod::sophiaEvent(bool onProton, double Ein, double z) const {
 	int nature = 1 - int(onProton); // interacting particle: 0 for proton, 1 for neutron
 	Ein /= GeV; 
 	double momentaList[5][2000]; // momentum list, what are the five components?
