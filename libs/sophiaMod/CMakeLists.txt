@@ -5,7 +5,7 @@ enable_language(Fortran)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(sophiaMod STATIC
-    sophia_interface.f
+    sophiaMod_interface.f
 )
 
 set_target_properties(sophiaMod PROPERTIES COMPILE_FLAGS -fPIC)

@@ -1,5 +1,5 @@
-#ifndef _SOPHIA_H
-#define _SOPHIA_H
+#ifndef _SOPHIAMOD_H
+#define _SOPHIAMOD_H
 
 extern "C" {
 void sophiaevent_(int& channel, double& inputenergy, double momentum[][2000],
