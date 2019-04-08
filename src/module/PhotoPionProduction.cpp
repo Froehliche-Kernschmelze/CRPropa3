@@ -347,4 +347,63 @@ double PhotoPionProduction::lossLength(int id, double gamma, double z) {
 	return 1. / lossRate;
 }
 
+std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, double z) const {
+	int nature = 1 - int(onProton); // interacting particle: 0 for proton, 1 for neutron
+	Ein /= GeV; 
+	double momentaList[5][2000]; // momentum list, what are the five components?
+	int particleList[2000]; // particle id list
+	int nParticles; // number of outgoing particles
+	double maxRedshift = 100; // IR photon density is zero above this redshift
+	int dummy1; // not needed
+	double dummy2[2]; // not needed
+	int background = (photonField == CMB) ? 1 : 2; // photon background: 1 for CMB, 2 for Kneiske IRB
+
+	sophiaevent_(nature, Ein, momentaList, particleList, nParticles, z, background, maxRedshift, dummy1, dummy2, dummy2);
+
+	std::vector<double> output;
+	for (int i = 0; i < nParticles; ++i) {
+		int id = 0;
+		int pType = particleList[i];
+		switch (pType) {
+			case 13:  // proton
+			case 14:  // neutron
+				id = nucleusId(1, 14 - pType);
+				break;
+			case -13:  // anti-proton
+			case -14:  // anti-neutron
+				id = -nucleusId(1, 14 - pType);
+				break;
+			case 1:  // photon
+				id = 22;
+				break;
+			case 2:  // positron
+				id = -11;
+				break;
+			case 3:  // electron
+				id = 11;
+				break;
+			case 15:  // nu_e
+				id = 12;
+				break;
+			case 16:  // anti-nu_e
+				id = -12;
+				break;
+			case 17:  // nu_mu
+				id = 14;
+				break;
+			case 18:  // antu-nu_mu
+				id = -14;
+				break;
+			default:
+				throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));
+		}
+		output.push_back(id);
+	}
+	for (int i = 0; i < nParticles; ++i) {
+		double Eout = momentaList[3][i] * GeV; // only the energy is used; could be changed for more detail
+		output.push_back(Eout);
+	}
+	return output;
+}
+
 } // namespace crpropa
