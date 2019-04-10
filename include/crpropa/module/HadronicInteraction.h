@@ -34,9 +34,9 @@ public:
 	double distribution_e(double energy, double x) const;
 	double distribution_my1(double energy, double x) const; 
 	double distribution_gamma(double energy, double x) const; 
-	double number_e(double energy) const;
-	double number_my1(double energy) const;
-	double number_gamma(double energy) const;
+	int numberOfElectrons(double energy) const;
+	int numberOfMuonNeutrinos(double energy) const;
+	int numberOfGammaRays(double energy) const;
 	double CrossSection_Kelner(double energy) const;
 
 	// these functions are not being used in the simulation
