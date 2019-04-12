@@ -62,21 +62,21 @@ Vector3d HadronicInteraction::getPosition(double height, double radius) const {
     return pos;
 }
 
-double HadronicInteraction::distribution_e(double energy, double x) const {
+double HadronicInteraction::distribution_e(double Eprimary, double x) const {
     /* Distribution function (energy) for electrons, electron neutrino and 
     (second) muon neutrinos based on Kelner 2006 - eqs. 62-65
     input: energy: primary's energy / x: Elepton/Epi | if second numu: x: Enumu/Eprimary
     */
-    double L = log(energy / TeV);
-    double Be = 1 / (69.5 + 2.65 * L + 0.3 * pow(L, 2.));
-    double betae = 1 / pow((0.201 + 0.062 * L + 0.00042 * pow(L, 2.)), 0.25);
-    double ke = (0.279 + 0.141 * L + 0.0172 * pow(L, 2.)) / (0.3 + pow((2.3 + L), 2.));
+    double L = log(Eprimary / TeV);
+    double Be = 1 / (69.5 + 2.65 * L + 0.3 * L * L);
+    double betae = 1 / pow((0.201 + 0.062 * L + 0.00042 * L * L), 0.25);
+    double ke = (0.279 + 0.141 * L + 0.0172 * L * L) / (0.3 + (2.3 + L) * (2.3 + L));
     double F = Be * pow((1 + ke * pow(log(x), 2.)), 3.) / (x * (1 + 0.3 / pow(x, betae))) * (pow(-log(x), 5.));
     return F;
 }
 
 // Number of electrons, electron neutrinos and (second) muons neutrinos produced in a given interaction  based on Kelner 2006
-int HadronicInteraction::numberOfElectrons(double energy) const {
+int HadronicInteraction::numberOfElectrons(double Eprimary) const {
     const double xMax = 1.;
     const double xMin = 1. / 100000.;
     const double stepSize = 1. / 100000.;
@@ -84,17 +84,17 @@ int HadronicInteraction::numberOfElectrons(double energy) const {
     double y = 0;
     double stepsDone = 0;
     do {
-        y += distribution_e(energy, x);
+        y += distribution_e(Eprimary, x);
         x += stepSize;
         stepsDone++;
     } while (x < xMax);
     return round(y / stepsDone * (x - 1. / 1000.));
 }
 
-double HadronicInteraction::distribution_my1(double energy, double x) const {
+double HadronicInteraction::distribution_my1(double Eprimary, double x) const {
     /* Distribution function (energy) for (first) muon neutrino based on Kelner 2006 
     eqs. 66-69. input: energy: primary's energy / x: Enumu1/Eprimary*/
-    double L = log(energy / TeV);
+    double L = log(Eprimary / TeV);
     double Bm = 1.75 + 0.204 * L + 0.01 * pow(L, 2.);
     double betam = 1 / (1.67 + 0.111 * L + 0.0038 * pow(L, 2.));
     double km = 1.07 - 0.086 * L + 0.002 * pow(L, 2.);
@@ -109,7 +109,7 @@ double HadronicInteraction::distribution_my1(double energy, double x) const {
 }
 
 // Number of (first) muon neutrinos produced in a given interaction  based on Kelner 2006
-int HadronicInteraction::numberOfMuonNeutrinos(double energy) const {
+int HadronicInteraction::numberOfMuonNeutrinos(double Eprimary) const {
     const double xMax = 0.427;
     const double xMin = 1. / 100000.;
     const double stepSize = 1. / 100000.;
@@ -117,17 +117,17 @@ int HadronicInteraction::numberOfMuonNeutrinos(double energy) const {
     double y = 0.;
     int stepsDone = 0;
     do {
-        y += distribution_my1(energy, x);
+        y += distribution_my1(Eprimary, x);
         x += stepSize;
         stepsDone++;
     } while (x < xMax);
     return round(y / stepsDone * (x - 1. / 1000.));
 }
 
-double HadronicInteraction::distribution_gamma(double energy, double x) const {
+double HadronicInteraction::distribution_gamma(double Eprimary, double x) const {
     /* Distribution function (energy) for gamma rays based on Kelner 2006 eqs. 58-61 
     energy: primary's energy / x: Egamma/Eprimary */
-    double L = log(energy / TeV);
+    double L = log(Eprimary / TeV);
     double Bg = 1.3 + 0.14 * L + 0.011 * L * L;
     double betag = 1 / (1.79 + 0.11 * L + 0.008 * L * L);
     double kg = 1 / (0.801 + 0.049 * L + 0.014 * L * L);
@@ -141,7 +141,7 @@ double HadronicInteraction::distribution_gamma(double energy, double x) const {
 }
 
 // Number of gamma rays produced in a given interaction  based on Kelner 2006
-int HadronicInteraction::numberOfGammaRays(double energy) const {
+int HadronicInteraction::numberOfGammaRays(double Eprimary) const {
     const double xMin = 1. / 100000.;
     const double xMax = 1.;
     const double stepSize = 1. / 100000.;
@@ -149,7 +149,7 @@ int HadronicInteraction::numberOfGammaRays(double energy) const {
     double y = 0.;
     int stepsDone = 0;
     do {
-        y += distribution_gamma(energy, x);
+        y += distribution_gamma(Eprimary, x);
         x += stepSize;
         stepsDone++;
     } while (x < xMax);
@@ -157,49 +157,49 @@ int HadronicInteraction::numberOfGammaRays(double energy) const {
 }
 
 // Energy distribution for lepton secondaries of pp interactions based on Carceller 2017
-double HadronicInteraction::distribution_Carceller(double energy, double x, double jcap, double a0, double b0) const {
-    double a = a0 * (1 + 0.073 * log(energy / PeV) + 0.0070 * log(energy / PeV) * log(energy / PeV));
-    double b = b0 * (1 + 0.020 * log(energy / PeV) + 0.0018 * log(energy / PeV) * log(energy / PeV));
+double HadronicInteraction::distribution_Carceller(double Eprimary, double x, double jcap, double a0, double b0) const {
+    double a = a0 * (1 + 0.073 * log(Eprimary / PeV) + 0.0070 * log(Eprimary / PeV) * log(Eprimary / PeV));
+    double b = b0 * (1 + 0.020 * log(Eprimary / PeV) + 0.0018 * log(Eprimary / PeV) * log(Eprimary / PeV));
     double A = a * pow((1 - jcap * x), 3.) / x;
-    double B = exp(-b * pow(jcap * x, 0.43)) / pow(1 + pow(0.1 * GeV / (x * energy), 0.5), 2.);
+    double B = exp(-b * pow(jcap * x, 0.43)) / pow(1 + pow(0.1 * GeV / (x * Eprimary), 0.5), 2.);
     double F = A * B;
     return F;
 }
 
 // Energy distribution for gamma photons based on Carceller 2017
-double HadronicInteraction::distribution_Carceller_g(double energy, double x, double jcap, double a0, double b0) const {
-    double a = a0 * (1 + 0.073 * log(energy / PeV) + 0.0070 * log(energy / PeV) * log(energy / PeV));
-    double b = b0 * (1 + 0.020 * log(energy / PeV) + 0.0018 * log(energy / PeV) * log(energy / PeV));
+double HadronicInteraction::distribution_Carceller_g(double Eprimary, double x, double jcap, double a0, double b0) const {
+    double a = a0 * (1 + 0.073 * log(Eprimary / PeV) + 0.0070 * log(Eprimary / PeV) * log(Eprimary / PeV));
+    double b = b0 * (1 + 0.020 * log(Eprimary / PeV) + 0.0018 * log(Eprimary / PeV) * log(Eprimary / PeV));
     double A = a * pow((1 - jcap * x), 3.) / x;
-    double B = exp(-b * pow(jcap * x, 0.43)) / pow(1 + pow(0.2 * GeV / (x * energy), 0.5), 2.);
+    double B = exp(-b * pow(jcap * x, 0.43)) / pow(1 + pow(0.2 * GeV / (x * Eprimary), 0.5), 2.);
     double F = A * B;
     return F;
 }
 
 // Cross Section of inelastic pp interaction based on Tan & Ng 1983 (Used in Galprop)
-double HadronicInteraction::CrossSection_Galprop(double energy) const {
+double HadronicInteraction::CrossSection_Galprop(double Eprimary) const {
     double cs_inel;
-    double U = log(energy / GeV * 1 / 200);
-    if (U >= 0 and energy >= 3 * GeV)
+    double U = log(Eprimary / GeV * 1 / 200);
+    if (U >= 0 and Eprimary >= 3 * GeV)
         cs_inel = (32.2 * (1 + 0.0273 * U)) * 1e-31 + 32.2 * 0.01 * pow(U, 2.) * 1e-31;
-    if (U < 0 and energy >= 3 * GeV)
+    if (U < 0 and Eprimary >= 3 * GeV)
         cs_inel = (32.2 * (1 + 0.0273 * U)) * 1e-31;
-    if (energy <= 0.3 * GeV)
+    if (Eprimary <= 0.3 * GeV)
         cs_inel = 0;
     return cs_inel;
 }
 
 // Cross Section of inelastic pp interaction based on Kelner 2006
-double HadronicInteraction::CrossSection_Kelner(double energy) const {
-    double L = log(energy / TeV);
-    double A = 1 - pow(1.22 * 1e-3 * TeV / energy, 4.);
+double HadronicInteraction::CrossSection_Kelner(double Eprimary) const {
+    double L = log(Eprimary / TeV);
+    double A = 1 - pow(1.22 * 1e-3 * TeV / Eprimary, 4.);
     double cs_inel = (34.3 + 1.88 * L + 0.25 * L * L) * A * A * 1e-31;
     return cs_inel;
 }
 
 // Cross Section of inelastic pp interaction based on Carceller 2017
-double HadronicInteraction::CrossSection_Carceller(double energy) const {
-    double cs_inel = 17.7 * pow(energy / GeV, 0.082) * 1e-31;
+double HadronicInteraction::CrossSection_Carceller(double Eprimary) const {
+    double cs_inel = 17.7 * pow(Eprimary / GeV, 0.082) * 1e-31;
     return cs_inel;
 }
 
@@ -209,23 +209,23 @@ void HadronicInteraction::process(Candidate *candidate) const {
         return;
 
     // Probability of interaction
-    double step = candidate->getCurrentStep();
-    double energy = candidate->current.getEnergy();
-    double cs_inel = CrossSection_Kelner(energy);
-    double p_pp = cs_inel * massDensity * step;
+    const double step = candidate->getCurrentStep();
+    const double Eprimary = candidate->current.getEnergy();
+    const double cs_inel = CrossSection_Kelner(Eprimary);
+    const double p_pp = cs_inel * massDensity * step;
 
     // limit next step to mean free path
-    double limit = 1 / p_pp * 0.1;
+    const double limit = 1 / p_pp * 0.1;
 
     if (step > limit)
         candidate->limitNextStep(limit);
 
     // Interaction?
     Random &random = Random::instance();
-    if (random.rand() > p_pp or energy < 1 * GeV)
+    if (random.rand() > p_pp or Eprimary < 1 * GeV)
         return;
 
-    Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());  // secondaries' pos
+    const Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());  // secondaries' pos
 
     /* Initialize current energies of secondaries */
     double Eout = 0;
@@ -238,9 +238,9 @@ void HadronicInteraction::process(Candidate *candidate) const {
     double Etot = 0;
 
     /* Establish number of secondaries */
-    const int Ngamma = numberOfGammaRays(energy);  // number of gamma rays
-    const int NnuMu1 = numberOfMuonNeutrinos(energy);  // number of first myon neutrino
-    const int Nelectron = numberOfElectrons(energy);  // number of electron
+    const int Ngamma = numberOfGammaRays(Eprimary);  // number of gamma rays
+    const int NnuMu1 = numberOfMuonNeutrinos(Eprimary);  // number of first myon neutrino
+    const int Nelectron = numberOfElectrons(Eprimary);  // number of electron
     const int NnuE = Nelectron;  // number of electron neutrino
     const int NnuMu2 = Nelectron;  // number of second muon neutrino
     const int Ntotal = Nelectron + Ngamma + NnuMu1 + NnuE + NnuMu2;  // Total number of secondaries in the interaction
@@ -259,48 +259,48 @@ void HadronicInteraction::process(Candidate *candidate) const {
     int test;
     int end = -1;
 
-    // Jump to random starting point:
-    double sp = random.rand();
-    if (sp <= 0.2)
+    /* Jump to random starting point: */
+    const double startPoint = random.rand();
+    if (startPoint <= 0.2)
         goto label1;
-    if (sp <= 0.4)
+    if (startPoint <= 0.4)
         goto label2;
-    if (sp <= 0.6)
+    if (startPoint <= 0.6)
         goto label3;
-    if (sp <= 0.8)
+    if (startPoint <= 0.8)
         goto label4;
-    if (sp <= 1.0)
+    if (startPoint <= 1.0)
         goto label5;
 
     do {
-        // Gamma rays
         label1:
-        test = iGamma;
 
+        // Gamma rays
+        test = iGamma;
         // Check if all gamma rays were created
         if (iGamma <= Ngamma) {
             if (end == -1) {
                 // pick gamma ray's energy
                 do {
-                    double x = threshold + random.rand() * (1 - Eout / energy - threshold);
-                    Eout = x * energy;
-                    double E = distribution_gamma(energy, x);
-                    double Emax = distribution_gamma(energy, threshold);
+                    double x = threshold + random.rand() * (1 - Eout / Eprimary - threshold);
+                    Eout = x * Eprimary;
+                    double E = distribution_gamma(Eprimary, x);
+                    double Emax = distribution_gamma(Eprimary, threshold);
                     double y = random.rand() * Emax;
 
-                    if (y < E and (Etot + Eout) < energy) {
+                    if (y < E and (Etot + Eout) < Eprimary) {
                         if (havePhotons)
                             candidate->addSecondary(22, Eout, pos);
                         Egamma += Eout;
                         Etot += Eout;
                         iTotal++;
                         iGamma++;
-                        if (Etot / energy >= (1 - threshold))
+                        if (Etot / Eprimary >= (1 - threshold))
                             end = iTotal;
                     }
                 } while (test == iGamma);
             } else {
-                Eout = (energy - Etot) / (Ntotal - end);
+                Eout = (Eprimary - Etot) / (Ntotal - end);
                 if (havePhotons)
                     candidate->addSecondary(22, Eout, pos);
                 Egamma += Eout;
@@ -308,6 +308,7 @@ void HadronicInteraction::process(Candidate *candidate) const {
                 iGamma++;
             }
         }
+
         label2:
 
         // First myon neutrino 14
@@ -316,23 +317,23 @@ void HadronicInteraction::process(Candidate *candidate) const {
            if (end == -1) {
                 do {
                     double x = threshold + random.rand() * (0.427 - threshold);
-                    Eout = x * energy;
-                    double E = distribution_my1(energy, x);
-                    double Emax = distribution_my1(energy, threshold);
+                    Eout = x * Eprimary;
+                    double E = distribution_my1(Eprimary, x);
+                    double Emax = distribution_my1(Eprimary, threshold);
                     double y = random.rand() * Emax;
-                    if (y < E and (Etot + Eout) < energy) {
+                    if (y < E and (Etot + Eout) < Eprimary) {
                         if (haveNeutrinos)
                             candidate->addSecondary(14, Eout, pos);
                         EnuMu1 += Eout;
                         Etot += Eout;
                         iTotal++;
                         iNuMu1++;
-                        if (Etot / energy >= (1 - threshold))
+                        if (Etot / Eprimary >= (1 - threshold))
                             end = iTotal;
                     }
                 } while (test == iNuMu1);
             } else {
-                Eout = (energy - Etot) / (Ntotal - end);
+                Eout = (Eprimary - Etot) / (Ntotal - end);
                 if (haveNeutrinos)
                     candidate->addSecondary(14, Eout, pos);
                 EnuMu1 += Eout;
@@ -340,6 +341,7 @@ void HadronicInteraction::process(Candidate *candidate) const {
                 iNuMu1++;
             }
         }
+
         label3:
 
         // Electron 11
@@ -347,24 +349,24 @@ void HadronicInteraction::process(Candidate *candidate) const {
         if (iElectron <= Nelectron) {
             if (end == -1) {
                 do {
-                    double x = threshold + random.rand() * (1 - Eout / energy - threshold);
-                    Eout = x * energy;
-                    double E = distribution_e(energy, x);
-                    double Emax = distribution_e(energy, threshold);
+                    double x = threshold + random.rand() * (1 - Eout / Eprimary - threshold);
+                    Eout = x * Eprimary;
+                    double E = distribution_e(Eprimary, x);
+                    double Emax = distribution_e(Eprimary, threshold);
                     double y = random.rand() * Emax;
-                    if (y < E and (Etot + Eout) < energy) {
+                    if (y < E and (Etot + Eout) < Eprimary) {
                         if (haveElectrons)
                             candidate->addSecondary(11, Eout, pos);
                         Etot += Eout;
                         Eelectron += Eout;
                         iTotal++;
                         iElectron++;
-                        if (Etot / energy >= (1 - threshold))
+                        if (Etot / Eprimary >= (1 - threshold))
                             end = iTotal;
                     }
                 } while (test == iElectron);
             } else {
-                Eout = (energy - Etot) / (Ntotal - end);
+                Eout = (Eprimary - Etot) / (Ntotal - end);
                 if (haveElectrons)
                     candidate->addSecondary(11, Eout, pos);
                 iTotal++;
@@ -373,31 +375,31 @@ void HadronicInteraction::process(Candidate *candidate) const {
             }
         }
 
-        // Electron neutrino 12
         label4:
 
+        // Electron neutrino 12
         test = iNuE;
         if (iNuE <= NnuE) {
             if (end == -1) {
                 do {
-                    double x = threshold + random.rand() * (1 - Eout / energy - threshold);
-                    Eout = x * energy;
-                    double E = distribution_e(energy, x);
-                    double Emax = distribution_e(energy, threshold);
+                    double x = threshold + random.rand() * (1 - Eout / Eprimary - threshold);
+                    Eout = x * Eprimary;
+                    double E = distribution_e(Eprimary, x);
+                    double Emax = distribution_e(Eprimary, threshold);
                     double y = random.rand() * Emax;
-                    if (y < E and (Etot + Eout) < energy) {
+                    if (y < E and (Etot + Eout) < Eprimary) {
                         if (haveNeutrinos)
                             candidate->addSecondary(12, Eout, pos);
                         EnuE += Eout;
                         Etot += Eout;
                         iTotal++;
                         iNuE++;
-                    if (Etot / energy >= (1 - threshold))
-                        end = iTotal;
+                        if (Etot / Eprimary >= (1 - threshold))
+                            end = iTotal;
                     }
                 } while (iNuE == test);
             } else {
-                Eout = (energy - Etot) / (Ntotal - end);
+                Eout = (Eprimary - Etot) / (Ntotal - end);
                 if (haveNeutrinos)
                     candidate->addSecondary(12, Eout, pos);
                 iTotal++;
@@ -406,31 +408,31 @@ void HadronicInteraction::process(Candidate *candidate) const {
             }
         }
 
-        // Second myon neutrino 14
         label5:
 
+        // Second myon neutrino 14
         test = iNuMu2;
         if (iNuMu2 <= NnuMu2) {
             if (end == -1) {
                 do {
-                    double x = threshold + random.rand() * (1 - Eout / energy - threshold);
-                    Eout = x * energy;
-                    double E = distribution_e(energy, x);
-                    double Emax = distribution_e(energy, threshold);
+                    double x = threshold + random.rand() * (1 - Eout / Eprimary - threshold);
+                    Eout = x * Eprimary;
+                    double E = distribution_e(Eprimary, x);
+                    double Emax = distribution_e(Eprimary, threshold);
                     double y = random.rand() * Emax;
-                    if (y < E and (Etot + Eout) < energy) {
+                    if (y < E and (Etot + Eout) < Eprimary) {
                         if (haveNeutrinos)
                             candidate->addSecondary(14, Eout, pos);
                         EnuMu2 += Eout;
                         Etot += Eout;
                         iTotal++;
                         iNuMu2++;
-                        if (Etot / energy >= (1 - threshold))
+                        if (Etot / Eprimary >= (1 - threshold))
                             end = iTotal;
                     }
                 } while (iNuMu2 == test);
             } else {
-                Eout = (energy - Etot) / (Ntotal - end);
+                Eout = (Eprimary - Etot) / (Ntotal - end);
                 if (haveNeutrinos)
                     candidate->addSecondary(14, Eout, pos);
                 iTotal++;
@@ -441,10 +443,10 @@ void HadronicInteraction::process(Candidate *candidate) const {
     } while (iTotal <= Ntotal);
 
     if (end != -1)
-        std::cout << 0 << "end != -1" << std::endl;
+        std::cout << end << " end != -1" << std::endl;
 
     // Reduce primary's energy
-    candidate->current.setEnergy(energy - (EnuE + EnuMu2 + Eelectron + EnuMu1 + Egamma));
+    candidate->current.setEnergy(Eprimary - (EnuE + EnuMu2 + Eelectron + EnuMu1 + Egamma));
     return;
 }
 
