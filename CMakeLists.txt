@@ -125,11 +125,6 @@ add_subdirectory(libs/sophia)
 list(APPEND CRPROPA_EXTRA_LIBRARIES sophia gfortran)
 list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophia)
 
-# SOPHIAmod (provided)
-add_subdirectory(libs/sophiaMod)
-list(APPEND CRPROPA_EXTRA_LIBRARIES sophiaMod gfortran)
-list(APPEND CRPROPA_EXTRA_INCLUDES libs/sophiaMod)
-
 # DINT (provided)
 add_subdirectory(libs/dint)
 list(APPEND CRPROPA_EXTRA_LIBRARIES dint)
