@@ -5,7 +5,7 @@
 
 #include <kiss/convert.h>
 #include <kiss/logger.h>
-#include "sophiaMod.h"
+#include "sophia.h"
 
 #include <limits>
 #include <cmath>
