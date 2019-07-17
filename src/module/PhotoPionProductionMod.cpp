@@ -347,18 +347,18 @@ double PhotoPionProductionMod::lossLength(int id, double gamma, double z) {
 	return 1. / lossRate;
 }
 
-std::vector<double> PhotoPionProductionMod::sophiaEvent(bool onProton, double Ein, double z) const {
+std::vector<double> PhotoPionProductionMod::sophiaEvent(bool onProton,  // proton or neutron
+                                                    	double Ein,     // primary nucleon's energy
+                                                    	double eps      // target photon's energy
+                                                    	) const {
 	int nature = 1 - int(onProton); // interacting particle: 0 for proton, 1 for neutron
-	Ein /= GeV; 
-	double momentaList[5][2000]; // momentum list, what are the five components?
+	Ein /= GeV;
+	eps /= GeV;
+	double momentaList[5][2000]; // momentum list
 	int particleList[2000]; // particle id list
 	int nParticles; // number of outgoing particles
-	double maxRedshift = 100; // IR photon density is zero above this redshift
-	int dummy1; // not needed
-	double dummy2[2]; // not needed
-	int background = (photonField == CMB) ? 1 : 2; // photon background: 1 for CMB, 2 for Kneiske IRB
 
-	sophiaevent_(nature, Ein, momentaList, particleList, nParticles, z, background, maxRedshift, dummy1, dummy2, dummy2);
+	sophiaeventmod_(nature, Ein, eps, momentaList, particleList, nParticles);
 
 	std::vector<double> output;
 	for (int i = 0; i < nParticles; ++i) {

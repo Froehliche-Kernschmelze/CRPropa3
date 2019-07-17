@@ -66,12 +66,11 @@ public:
 	 This is not used in the simulation.
 	 Returns a vector of length 2x the amount of produced particles;
 	 the first half contains their IDs, the second their energy.
-	 @param nature       0 = proton, 1 = neutron
+	 @param nature       primary proton or neutron
 	 @param Ein          Energy of interacting nucleon
-	 @param z            redshift
-	 @param background   1 = CMB, 2 = IRB Kneiske
+	 @param eps          Energy of scattering photon
 	*/
-	std::vector<double> sophiaEvent(bool onProton, double Ein, double z = 0) const;
+	std::vector<double> sophiaEvent(bool onProton, double Ein, double eps) const;
 };
 /** @}*/
 
