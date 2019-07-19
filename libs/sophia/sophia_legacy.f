@@ -16809,6 +16809,7 @@ cc
          stop
       endif
 
+      epseV = 1.D-3  ! set constant for demonstration
       PRINT*, "eps = ", epseV
       eps = epseV/1.D9
 c      Etot = E0+eps
