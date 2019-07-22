@@ -28,7 +28,8 @@ private:
 
 	bool havePhotons; ///< flag for production of secondary photons
 	std::string tag;
-	double secondaryThreshold; ///< threshold energy for secondary photons
+	double secondaryThresholdLower; ///< lower threshold energy for secondary photons
+	double secondaryThresholdUpper; ///< upper threshold energy for secondary photons
 
 	std::vector<double> tabx; ///< tabulated fraction E_photon/E_critical from 10^-6 to 10^2 in 801 log-spaced steps
 	std::vector<double> tabCDF; ///< tabulated CDF of synchrotron spectrum
@@ -57,8 +58,11 @@ public:
 	void setLimit(double limit);
 	double getLimit();
 
-	void setSecondaryThreshold(double threshold);
-	double getSecondaryThreshold() const;
+	void setSecondaryThresholdLower(double threshold);
+	double getSecondaryThresholdLower() const;
+
+	void setSecondaryThresholdUpper(double threshold);
+	double getSecondaryThresholdUpper() const;
 
 	void initSpectrum();
 	void process(Candidate *candidate) const;

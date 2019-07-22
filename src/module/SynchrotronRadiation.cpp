@@ -15,7 +15,8 @@ SynchrotronRadiation::SynchrotronRadiation(ref_ptr<MagneticField> field, bool ha
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 	this->tag = tag;
-	secondaryThreshold = 1e7 * eV;
+	secondaryThresholdLower = 1e7 * eV;
+	secondaryThresholdUpper = std::numeric_limits<double>::max();
 }
 
 SynchrotronRadiation::SynchrotronRadiation(double Brms, bool havePhotons, std::string tag, double limit) {
@@ -24,7 +25,8 @@ SynchrotronRadiation::SynchrotronRadiation(double Brms, bool havePhotons, std::s
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 	this->tag = tag;
-	secondaryThreshold = 1e7 * eV;
+	secondaryThresholdLower = 1e7 * eV;
+	secondaryThresholdUpper = std::numeric_limits<double>::max();
 }
 
 void SynchrotronRadiation::setField(ref_ptr<MagneticField> f) {
@@ -59,12 +61,20 @@ double SynchrotronRadiation::getLimit() {
 	return limit;
 }
 
-void SynchrotronRadiation::setSecondaryThreshold(double threshold) {
-	secondaryThreshold = threshold;
+void SynchrotronRadiation::setSecondaryThresholdLower(double threshold) {
+	secondaryThresholdLower = threshold;
 }
 
-double SynchrotronRadiation::getSecondaryThreshold() const {
-	return secondaryThreshold;
+double SynchrotronRadiation::getSecondaryThresholdLower() const {
+	return secondaryThresholdLower;
+}
+
+void SynchrotronRadiation::setSecondaryThresholdUpper(double threshold) {
+	secondaryThresholdUpper = threshold;
+}
+
+double SynchrotronRadiation::getSecondaryThresholdUpper() const {
+	return secondaryThresholdUpper;
 }
 
 void SynchrotronRadiation::initSpectrum() {
@@ -127,7 +137,7 @@ void SynchrotronRadiation::process(Candidate *candidate) const {
 
 	// check if photons with energies > 14 * Ecrit are possible
 	double Ecrit = 3. / 4 * h_planck / M_PI * c_light * pow(lf, 3) / Rg;
-	if (14 * Ecrit < secondaryThreshold)
+	if (14 * Ecrit < secondaryThresholdLower)
 		return;
 
 	// draw photons up to the total energy loss
@@ -148,7 +158,7 @@ void SynchrotronRadiation::process(Candidate *candidate) const {
 		// create synchrotron photon and repeat with remaining energy
 		dE -= Egamma;
 		// create only photons with energies above threshold
-		if (Egamma > secondaryThreshold) {
+		if ((Egamma > secondaryThresholdLower) && (Egamma < secondaryThresholdUpper)) {
 			Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 			candidate->addSecondary(22, Egamma, pos, tag);
 		}
@@ -163,7 +173,7 @@ std::string SynchrotronRadiation::getDescription() const {
 	else
 		s << " for Brms = " << Brms / nG << " nG";
 	if (havePhotons)
-		s << ", synchrotron photons E > " << secondaryThreshold / eV << " eV";
+		s << ", synchrotron photons E > " << secondaryThresholdLower / eV << " eV";
 	else
 		s << ", no synchrotron photons";
 	return s.str();
