@@ -34,9 +34,9 @@ void PhotoPionProductionMod::setPhotonField(PhotonField field) {
 	std::string fname = photonFieldName(field);
 	setDescription("PhotoPionProductionMod: " + fname);
 	if (haveRedshiftDependence)
-		initRate(getDataPath("PhotoPionProductionMod/rate_" + fname.replace(0, 3, "IRBz") + ".txt"));
+		initRate(getDataPath("PhotoPionProduction/rate_" + fname.replace(0, 3, "IRBz") + ".txt"));
 	else
-		initRate(getDataPath("PhotoPionProductionMod/rate_" + fname + ".txt"));
+		initRate(getDataPath("PhotoPionProduction/rate_" + fname + ".txt"));
 }
 
 void PhotoPionProductionMod::setHavePhotons(bool b) {
