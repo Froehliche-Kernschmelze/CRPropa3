@@ -47,13 +47,12 @@ class Grid: public Referenced {
 	Vector3d gridOrigin; /**< Grid origin */
 	Vector3d spacing; /**< Distance between grid points, determines the spatial extension of the grid */
 	double timing; /**< Time between grid points, determines the temporal extension of the grid */
-	double startTime;  /**< Point of time from which the grid starts */
+	double startTime; /**< Point of time from which the grid starts */
 	bool reflective; /**< If set to true, the grid is repeated reflectively instead of periodically */
 
-
 public:
+	/** empty grid for initialization in some modules */
 	Grid() {
-		// empty grid for initialization in some modules
 		setOrigin(Vector3d(0.));
 		setGridSize(0, 0, 0, 0);
 		setSpacing(Vector3d(0.));
