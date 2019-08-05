@@ -4,6 +4,7 @@
 #include "crpropa/Module.h"
 #include "crpropa/Units.h"
 #include "crpropa/magneticField/MagneticField.h"
+#include "crpropa/Grid.h"
 
 namespace crpropa {
 /**
@@ -52,6 +53,8 @@ public:
 private:
 	std::vector<double> a, b, bs; /*< Cash-Karp coefficients */
 	ref_ptr<MagneticField> field;
+	bool hasScaling;
+	crpropa::ScalarGrid4d scaling;
 	double tolerance; /*< target relative error of the numerical integration */
 	double minStep; /*< minimum step size of the propagation */
 	double maxStep; /*< maximum step size of the propagation */
@@ -63,10 +66,10 @@ public:
 
 	// derivative of phase point, dY/dt = d/dt(x, u) = (v, du/dt)
 	// du/dt = q*c^2/E * (u x B)
-	Y dYdt(const Y &y, ParticleState &p, double z) const;
+	Y dYdt(const Y &y, ParticleState &p, double z, Vector3d totalPos, double totalTime) const;
 
 	void tryStep(const Y &y, Y &out, Y &error, double t,
-			ParticleState &p, double z) const;
+			ParticleState &p, double z, Vector3d totalPos, double totalTime) const;
 
 	void setField(ref_ptr<MagneticField> field);
 	void setTolerance(double tolerance);
@@ -77,6 +80,10 @@ public:
 	double getMinimumStep() const;
 	double getMaximumStep() const;
 	std::string getDescription() const;
+
+	void setScaling(crpropa::ScalarGrid4d scaling);
+	double getScaling(const Vector3d &totalPos, const double &totalTime) const;
+	bool getHasScaling() const;
 };
 /** @}*/
 

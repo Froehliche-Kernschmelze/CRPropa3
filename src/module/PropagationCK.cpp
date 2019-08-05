@@ -26,7 +26,7 @@ const double cash_karp_bs[] = {
 };
 
 void PropagationCK::tryStep(const Y &y, Y &out, Y &error, double h,
-		ParticleState &particle, double z) const {
+		ParticleState &particle, double z, Vector3d totalPos, double totalTime) const {
 	std::vector<Y> k;
 	k.reserve(6);
 
@@ -41,19 +41,20 @@ void PropagationCK::tryStep(const Y &y, Y &out, Y &error, double h,
 			y_n += k[j] * a[i * 6 + j] * h;
 
 		// update k_i
-		k[i] = dYdt(y_n, particle, z);
+		k[i] = dYdt(y_n, particle, z, totalPos, totalTime);
 
 		out += k[i] * b[i] * h;
 		error += k[i] * (b[i] - bs[i]) * h;
 	}
 }
 
-PropagationCK::Y PropagationCK::dYdt(const Y &y, ParticleState &p, double z) const {
+PropagationCK::Y PropagationCK::dYdt(const Y &y, ParticleState &p, double z, Vector3d totalPos, double totalTime) const {
 	// normalize direction vector to prevent numerical losses
 	Vector3d velocity = y.u.getUnitVector() * c_light;
 	Vector3d B(0, 0, 0);
 	try {
 		B = field->getField(y.x, z);
+		B *= getScaling(totalPos, totalTime);
 	} catch (std::exception &e) {
 		std::cerr << "PropagationCK: Exception in getField." << std::endl;
 		std::cerr << e.what() << std::endl;
@@ -70,6 +71,7 @@ PropagationCK::PropagationCK(ref_ptr<MagneticField> field, double tolerance,
 	setTolerance(tolerance);
 	setMaximumStep(maxStep);
 	setMinimumStep(minStep);
+	this->hasScaling = false;
 
 	// load Cash-Karp coefficients
 	a.assign(cash_karp_a, cash_karp_a + 36);
@@ -99,11 +101,13 @@ void PropagationCK::process(Candidate *candidate) const {
 	double newStep = step;
 	double r = 42;  // arbitrary value > 1
 	double z = candidate->getRedshift();
+	Vector3d totalPos = candidate->current.getPosition();
+	double totalTime = candidate->getTrajectoryLength() / c_light;
 
 	// try performing step until the target error (tolerance) or the minimum step size has been reached
 	while (r > 1) {
 		step = newStep;
-		tryStep(yIn, yOut, yErr, step / c_light, current, z);
+		tryStep(yIn, yOut, yErr, step / c_light, current, z, totalPos, totalTime);
 
 		r = yErr.u.getR() / tolerance;  // ratio of absolute direction error and tolerance
 		newStep = step * 0.95 * pow(r, -0.2);  // update step size to keep error close to tolerance
@@ -164,6 +168,22 @@ std::string PropagationCK::getDescription() const {
 	s << ", Minimum Step: " << minStep / kpc << " kpc";
 	s << ", Maximum Step: " << maxStep / kpc << " kpc";
 	return s.str();
+}
+
+void PropagationCK::setScaling(crpropa::ScalarGrid4d scaling) {
+	this->scaling = scaling;
+	this->hasScaling = true;
+}
+
+double PropagationCK::getScaling(const Vector3d &pos, const double &time) const {
+	if (hasScaling)
+		return scaling.interpolate(pos, time);
+	else
+		return 1.;
+}
+
+bool PropagationCK::getHasScaling() const {
+	return hasScaling;
 }
 
 } // namespace crpropa
