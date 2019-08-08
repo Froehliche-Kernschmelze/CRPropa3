@@ -12,6 +12,21 @@ SynchrotronRadiation::SynchrotronRadiation(ref_ptr<MagneticField> field, bool ha
 	Brms = 0.;
 	setField(field);
 	initSpectrum();
+	this->spaceTimeGrid = ScalarGrid4d();
+	setDescription("SynchrotronRadiation_isotropicConstant");
+	this->havePhotons = havePhotons;
+	this->limit = limit;
+	this->tag = tag;
+	secondaryThresholdLower = 1e7 * eV;
+	secondaryThresholdUpper = std::numeric_limits<double>::max();
+}
+
+SynchrotronRadiation::SynchrotronRadiation(ref_ptr<MagneticField> field, ScalarGrid4d spaceTimeGrid, bool havePhotons, std::string tag, double limit) {
+	Brms = 0.;
+	setField(field);
+	initSpectrum();
+	this->spaceTimeGrid = spaceTimeGrid;
+	setDescription("SynchrotronRadiation_spaceTimeDependent");
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 	this->tag = tag;
@@ -22,6 +37,20 @@ SynchrotronRadiation::SynchrotronRadiation(ref_ptr<MagneticField> field, bool ha
 SynchrotronRadiation::SynchrotronRadiation(double Brms, bool havePhotons, std::string tag, double limit) {
 	this->Brms = Brms;
 	initSpectrum();
+	this->spaceTimeGrid = ScalarGrid4d();
+	setDescription("SynchrotronRadiation_isotropicConstant");
+	this->havePhotons = havePhotons;
+	this->limit = limit;
+	this->tag = tag;
+	secondaryThresholdLower = 1e7 * eV;
+	secondaryThresholdUpper = std::numeric_limits<double>::max();
+}
+
+SynchrotronRadiation::SynchrotronRadiation(double Brms, ScalarGrid4d spaceTimeGrid, bool havePhotons, std::string tag, double limit) {
+	this->Brms = Brms;
+	initSpectrum();
+	this->spaceTimeGrid = spaceTimeGrid;
+	setDescription("SynchrotronRadiation_spaceTimeDependent");
 	this->havePhotons = havePhotons;
 	this->limit = limit;
 	this->tag = tag;
@@ -108,16 +137,32 @@ void SynchrotronRadiation::process(Candidate *candidate) const {
 	if (charge == 0)
 		return; // only charged particles
 
+	// geometric scaling
+	Vector3d pos = candidate->current.getPosition();
+	const double time = candidate->getTrajectoryLength() / c_light;
+	double scaling = 1;
+    const std::string description = getDescription();
+    if (description == "SynchrotronRadiation_isotropicConstant") {
+        // do nothing, just check for correct initialization
+    } else if (description == "SynchrotronRadiation_spaceTimeDependent") {
+        scaling *= spaceTimeGrid.interpolate(pos, time);
+    } else {
+        throw std::runtime_error("SynchrotronRadiation: invalid description string");
+    }
+    if (scaling == 0.)
+        return;
+
 	// calculate gyroradius, evaluated at the current position
 	double z = candidate->getRedshift();
 	double B;
 	if (field.valid()) {
-		Vector3d Bvec = field->getField(candidate->current.getPosition(), z);
+		Vector3d Bvec = field->getField(pos, z);
 		B = Bvec.cross(candidate->current.getDirection()).getR();
 	} else {
 		B = sqrt(2. / 3) * Brms; // average perpendicular field component
 	}
 	B *= pow(1 + z, 2); // cosmological scaling
+	B *= scaling;
 	double Rg = candidate->current.getMomentum().getR() / charge / B;
 
 	// calculate energy loss

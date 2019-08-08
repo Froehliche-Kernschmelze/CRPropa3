@@ -3,6 +3,7 @@
 
 #include "crpropa/Module.h"
 #include "crpropa/magneticField/MagneticField.h"
+#include "crpropa/Grid.h"
 
 namespace crpropa {
 /**
@@ -28,6 +29,7 @@ private:
 
 	bool havePhotons; ///< flag for production of secondary photons
 	std::string tag;
+	ScalarGrid4d spaceTimeGrid;
 	double secondaryThresholdLower; ///< lower threshold energy for secondary photons
 	double secondaryThresholdUpper; ///< upper threshold energy for secondary photons
 
@@ -41,7 +43,19 @@ public:
 						 std::string tag = "synch",
 						 double limit = 0.1);
 
+	SynchrotronRadiation(ref_ptr<MagneticField> field,
+						 ScalarGrid4d spaceTimeGrid,
+						 bool havePhotons = false,
+						 std::string tag = "synch",
+						 double limit = 0.1);
+
 	SynchrotronRadiation(double Brms = 0,
+						 bool havePhotons = false,
+						 std::string tag = "synch",
+						 double limit = 0.1);
+
+	SynchrotronRadiation(double Brms,
+						 ScalarGrid4d spaceTimeGrid,
 						 bool havePhotons = false,
 						 std::string tag = "synch",
 						 double limit = 0.1);
