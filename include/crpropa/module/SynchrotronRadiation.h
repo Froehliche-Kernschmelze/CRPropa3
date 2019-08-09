@@ -80,7 +80,7 @@ public:
 
 	void initSpectrum();
 	void process(Candidate *candidate) const;
-	std::string getDescription() const;
+	// std::string getDescription() const;
 };
 /** @}*/
 

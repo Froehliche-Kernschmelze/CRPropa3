@@ -210,18 +210,18 @@ void SynchrotronRadiation::process(Candidate *candidate) const {
 	}
 }
 
-std::string SynchrotronRadiation::getDescription() const {
-	std::stringstream s;
-	s << "Synchrotron radiation";
-	if (field.valid())
-		s << " for specified magnetic field";
-	else
-		s << " for Brms = " << Brms / nG << " nG";
-	if (havePhotons)
-		s << ", synchrotron photons E > " << secondaryThresholdLower / eV << " eV";
-	else
-		s << ", no synchrotron photons";
-	return s.str();
-}
+// std::string SynchrotronRadiation::getDescription() const {
+// 	std::stringstream s;
+// 	s << "Synchrotron radiation";
+// 	if (field.valid())
+// 		s << " for specified magnetic field";
+// 	else
+// 		s << " for Brms = " << Brms / nG << " nG";
+// 	if (havePhotons)
+// 		s << ", synchrotron photons E > " << secondaryThresholdLower / eV << " eV";
+// 	else
+// 		s << ", no synchrotron photons";
+// 	return s.str();
+// }
 
 } // namespace crpropa
