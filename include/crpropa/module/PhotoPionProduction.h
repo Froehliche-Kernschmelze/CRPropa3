@@ -91,7 +91,29 @@ public:
 	int produce(const std::vector<double> &particle) const;
 	double drawEnergy(const std::vector<double> &data) const;
 	double snapToHalfLog(double x) const;
-	std::vector<double> sophiaEventHist(bool onProton, double E, double e) const;
+	
+	/**
+	 Direct SOPHIA interface (histogram version).
+	 This is not used in the simulation.
+	 Returns a vector of length 2x the amount of produced particles;
+	 the first half contains their IDs, the second their energy.
+	 @param onProton     true = proton, false = neutron
+	 @param Ein          energy of interacting nucleon
+	 @param eps          energy of target photon
+	*/
+	std::vector<double> sophiaEventHist(bool onProton, double Ein, double eps) const;
+
+	/**
+	 Direct SOPHIA interface.
+	 This is not used in the simulation.
+	 Returns a vector of length 2x the amount of produced particles;
+	 the first half contains their IDs, the second their energy.
+	 @param onProton     true = proton, false = neutron
+	 @param Ein          energy of interacting nucleon
+	 @param eps          energy of target photon
+	*/
+	std::vector<double> sophiaEvent(bool onProton, double Ein, double eps) const;
+
 	/**
 	 Calculates the loss length E dx/dE in [m].
 	 This is not used in the simulation.

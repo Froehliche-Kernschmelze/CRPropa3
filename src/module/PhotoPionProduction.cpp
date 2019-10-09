@@ -679,6 +679,62 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	}
 }
 
+std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, double eps) const {
+    int nature = 1 - int(onProton); // interacting particle: 0 for proton, 1 for neutron
+    Ein /= GeV;
+    eps /= eV;
+    double outputEnergy[2000];
+    int outPartID[2000];
+    int nOutPart;
+
+    sophiaevent_(nature, Ein, eps, outputEnergy, outPartID, nOutPart);
+
+    std::vector<double> output;
+    for (int i = 0; i < nOutPart; ++i) {
+        int id = 0;
+        int pType = outPartID[i];
+        switch (pType) {
+            case 13:  // proton
+            case 14:  // neutron
+                id = nucleusId(1, 14 - pType);
+                break;
+            case -13:  // anti-proton
+            case -14:  // anti-neutron
+                id = -nucleusId(1, 14 - pType);
+                break;
+            case 1:  // photon
+                id = 22;
+                break;
+            case 2:  // positron
+                id = -11;
+                break;
+            case 3:  // electron
+                id = 11;
+                break;
+            case 15:  // nu_e
+                id = 12;
+                break;
+            case 16:  // anti-nu_e
+                id = -12;
+                break;
+            case 17:  // nu_mu
+                id = 14;
+                break;
+            case 18:  // antu-nu_mu
+                id = -14;
+                break;
+            default:
+                throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));
+        }
+        output.push_back(id);
+    }
+    for (int i = 0; i < nOutPart; ++i) {
+        double Eout = outputEnergy[i] * GeV; // only the energy is used; could be changed for more detail
+        output.push_back(Eout);
+    }
+    return output;
+}
+
 // double PhotoPionProduction::lossLength(int id, double gamma, double z) {
 //     int A = massNumber(id);
 //     int Z = chargeNumber(id);
