@@ -91,7 +91,7 @@ public:
 	int produce(const std::vector<double> &particle) const;
 	double drawEnergy(const std::vector<double> &data) const;
 	double snapToHalfLog(double x) const;
-	std::vector<double> sophiaEvent(bool onProton, double E, double e) const;
+	std::vector<double> sophiaEventHist(bool onProton, double E, double e) const;
 	/**
 	 Calculates the loss length E dx/dE in [m].
 	 This is not used in the simulation.

@@ -274,7 +274,7 @@ double PhotoPionProduction::snapToHalfLog(double x) const {
 }
 
 
-std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton,  // 0=p, 1=n
+std::vector<double> PhotoPionProduction::sophiaEventHist(bool onProton,  // 0=p, 1=n
                                                      double E,       // primary nucleon's energy / GeV
                                                      double e        // target photon's energy / eV
                                                      ) const {
@@ -566,7 +566,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     int nOutPart;
 
     if (useTabulatedData) {
-        std::vector<double> outVec = sophiaEvent(onProton, Ein, eps);
+        std::vector<double> outVec = sophiaEventHist(onProton, Ein, eps);
         nOutPart = outVec.size() / 2;
         for (int i = 0; i < nOutPart; ++i) {
             outPartID[i] = outVec[i];
