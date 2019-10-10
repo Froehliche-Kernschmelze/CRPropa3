@@ -104,6 +104,16 @@ public:
 	std::vector<double> sophiaEventHist(bool onProton, double Ein, double eps) const;
 
 	/**
+	 Direct SOPHIA interface (sampling from photon field at redshift z=0).
+	 This is not used in the simulation.
+	 Returns a vector of length 2x the amount of produced particles;
+	 the first half contains their IDs, the second their energy.
+	 @param onProton     true = proton, false = neutron
+	 @param Ein          energy of interacting nucleon
+	*/
+	std::vector<double> sophiaEvent(bool onProton, double Ein) const;
+
+	/**
 	 Direct SOPHIA interface.
 	 This is not used in the simulation.
 	 Returns a vector of length 2x the amount of produced particles;

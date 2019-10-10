@@ -679,6 +679,12 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	}
 }
 
+std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein) const {
+    double z = 0.;
+    double eps = customPhotonField.sampleEps(onProton, Ein, z);
+    return sophiaEvent(onProton, Ein, eps);
+}
+
 std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, double eps) const {
     int nature = 1 - int(onProton); // interacting particle: 0 for proton, 1 for neutron
     Ein /= GeV;
