@@ -558,7 +558,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
     // SOPHIA - input:
     int nature = 1 - static_cast<int>(onProton);  // 0=proton, 1=neutron
     double Ein = EpA / GeV;  // GeV is the SOPHIA standard unit
-    double eps = customPhotonField.sampleEps(onProton, Ein, z);
+    double eps = customPhotonField.sampleEps(onProton, Ein, z);  // eV for SOPHIA
 
     // SOPHIA - output:
     double outputEnergy[2000];
@@ -586,12 +586,12 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 	std::vector<double> pnEnergy;  // corresponding energies of proton or neutron
 	for (int i = 0; i < nOutPart; i++) { // loop over out-going particles
 		double Eout = outputEnergy[i] * GeV; // only the energy is used; could be changed for more detail
-		int pType = outPartID[i];
-		switch (pType) {
+		int partType = outPartID[i];
+		switch (partType) {
 		case 13: // proton
 		case 14: // neutron
 			// proton and neutron data is taken to determine primary particle in a later step
-			pnType.push_back(pType);
+			pnType.push_back(partType);
 			pnEnergy.push_back(Eout);
 			break;
 		case -13: // anti-proton
@@ -599,7 +599,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 			if (haveAntiNucleons)
 				try
 				{
-					candidate->addSecondary(-sign * nucleusId(1, 14 + pType), Eout, pos, tag);
+					candidate->addSecondary(-sign * nucleusId(1, 14 + partType), Eout, pos, tag);
 				}
 				catch (std::runtime_error &e)
 				{
@@ -636,7 +636,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 				candidate->addSecondary(sign * -14, Eout, pos, tag);
 			break;
 		default:
-			throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));
+			throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(partType));
 		}
 	}
 
@@ -681,7 +681,7 @@ void PhotoPionProduction::performInteraction(Candidate *candidate, bool onProton
 
 std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein) const {
     double z = 0.;
-    double eps = customPhotonField.sampleEps(onProton, Ein, z);
+    double eps = customPhotonField.sampleEps(onProton, Ein / GeV, z) * eV;
     return sophiaEvent(onProton, Ein, eps);
 }
 
@@ -698,15 +698,15 @@ std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, 
     std::vector<double> output;
     for (int i = 0; i < nOutPart; ++i) {
         int id = 0;
-        int pType = outPartID[i];
-        switch (pType) {
+        int partType = outPartID[i];
+        switch (partType) {
             case 13:  // proton
             case 14:  // neutron
-                id = nucleusId(1, 14 - pType);
+                id = nucleusId(1, 14 - partType);
                 break;
             case -13:  // anti-proton
             case -14:  // anti-neutron
-                id = -nucleusId(1, 14 - pType);
+                id = -nucleusId(1, 14 + partType);
                 break;
             case 1:  // photon
                 id = 22;
@@ -730,7 +730,7 @@ std::vector<double> PhotoPionProduction::sophiaEvent(bool onProton, double Ein, 
                 id = -14;
                 break;
             default:
-                throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(pType));
+                throw std::runtime_error("PhotoPionProduction: unexpected particle " + kiss::str(partType));
         }
         output.push_back(id);
     }
