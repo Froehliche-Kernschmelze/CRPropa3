@@ -1,4 +1,5 @@
 #include "crpropa/module/HadronicInteraction.h"
+#include "crpropa/Common.h"
 #include "crpropa/Units.h"
 #include "crpropa/ParticleID.h"
 #include "crpropa/ParticleMass.h"
@@ -42,36 +43,6 @@ double HadronicInteraction::etaSpectrum(double x, double ePrimary) const {
     const double term3 = pionSpectrum(x, ePrimary);
     const double Feta = term1 * term2 * term3;
     return Feta;
-}
-
-int HadronicInteraction::samplePionNumber(double ePrimary) const {
-    const double xMin = 1. / 1000.;
-    const double xMax = 1.;
-    const double stepSize = 1. / 1000.;
-    double x = xMin;
-    double y = 0.;
-    int stepsDone = 0;
-    do {
-        y += pionSpectrum(x, ePrimary);
-        x += stepSize;
-        stepsDone++;
-    } while (x < xMax);
-    return round(y / stepsDone * (x - xMin));
-}
-
-int HadronicInteraction::sampleEtaNumber(double ePrimary) const {
-    const double xMin = 1. / 1000.;
-    const double xMax = 1.;
-    const double stepSize = 1. / 1000.;
-    double x = xMin;
-    double y = 0.;
-    int stepsDone = 0;
-    do {
-        y += etaSpectrum(x, ePrimary);
-        x += stepSize;
-        stepsDone++;
-    } while (x < xMax);
-    return round(y / stepsDone * (x - xMin));
 }
 
 double HadronicInteraction::samplePionEnergy(double ePrimary) const {
@@ -162,7 +133,7 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
 
     do {
         if (doPi0 && !donePi0) {
-            int nPi0 = samplePionNumber(eAvailable);
+            int nPi0 = std::round(gaussInt([this, eAvailable](double x) { return this->pionSpectrum(x, eAvailable); }, 0., 1.));
             // std::cout << "nPi0 = " << nPi0 << std::endl;
             for (int i = 0; i < nPi0; ++i) {
                 const double ePi0 = samplePionEnergy(eAvailable);
@@ -181,7 +152,7 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
         }
 
         if (doPiCharged && !donePiCharged) {
-            int nPiCharged = 2 * samplePionNumber(eAvailable);
+            int nPiCharged = 2 * std::round(gaussInt([this, eAvailable](double x) { return this->pionSpectrum(x, eAvailable); }, 0., 1.));
             // std::cout << "nPi+/- = " << nPiCharged << std::endl;
             for (int i = 0; i < nPiCharged / 2; ++i) {
                 const double ePiPlus = samplePionEnergy(eAvailable);
@@ -206,7 +177,7 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
         }
 
         if (doEta && !doneEta) {
-            int nEta = sampleEtaNumber(eAvailable);
+            int nEta = std::round(gaussInt([this, eAvailable](double x) { return this->etaSpectrum(x, eAvailable); }, 0., 1.));
             // std::cout << "nEta = " << nEta << std::endl;
             for (int i = 0; i < nEta; ++i) {
                 const double eEta = sampleEtaEnergy(eAvailable);

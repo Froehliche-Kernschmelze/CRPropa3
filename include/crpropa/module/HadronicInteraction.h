@@ -26,8 +26,6 @@ public:
 	double xSectionKelner06(double ePrimary) const;
 	double pionSpectrum(double x, double ePrimary) const;
 	double etaSpectrum(double x, double ePrimary) const;
-	int samplePionNumber(double ePrimary) const;
-	int sampleEtaNumber(double ePrimary) const;
 	double samplePionEnergy(double ePrimary) const;
 	double sampleEtaEnergy(double ePrimary) const;
 };
