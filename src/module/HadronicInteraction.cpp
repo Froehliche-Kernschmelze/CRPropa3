@@ -13,14 +13,24 @@
 namespace crpropa {
 
 
-HadronicInteraction::HadronicInteraction(double massDensity) {
+HadronicInteraction::HadronicInteraction(double massDensity, double limit) {
 	this->massDensity = massDensity;
+	this->limit = limit;
 	setDescription("HadronicInteraction");
 }
 
-double HadronicInteraction::pionSpectrum(double x, double ePrimary) const {
-	const double E0pi = 139. * MeV;
-	if (x < E0pi / ePrimary) return 0.;
+void HadronicInteraction::setMassDensity(double dens) {
+	this->massDensity = massDensity;
+}
+
+void HadronicInteraction::setLimit(double lim) {
+	this->limit = lim;
+}
+
+double HadronicInteraction::spectrumPion(double x, double ePrimary) const {
+	const double E0pi = 139.571 * MeV;
+	if (x < E0pi / ePrimary)
+		return 0.;
 	const double L = std::log(ePrimary / TeV);
 	const double a = 3.67 + 0.83 * L + 0.075 * L * L;
 	const double Bpi = a + 0.25;
@@ -35,60 +45,18 @@ double HadronicInteraction::pionSpectrum(double x, double ePrimary) const {
 	return Fpi;
 }
 
-double HadronicInteraction::etaSpectrum(double x, double ePrimary) const {
-	const double E0eta = 547. * MeV;
-	if (x < E0eta / ePrimary) return 0.;
-	const double term1 = 0.55 + 0.028 * std::log(x);
-	const double term2 = std::sqrt(1. - E0eta  / (x * ePrimary));
-	const double term3 = pionSpectrum(x, ePrimary);
-	const double Feta = term1 * term2 * term3;
-	return Feta;
-}
-
-double HadronicInteraction::samplePionEnergy(double ePrimary) const {
-	double Fmax = 0.;
-	const double xMin = 1. / 1000.;
-	const double xMax = 1.;
-	const double stepSize = 1. / 1000.;
-
-	double x = xMin;
-	while (x < xMax) {
-		double F = pionSpectrum(x, ePrimary);
-		if (F > Fmax)
-			Fmax = F;
-		x += stepSize;
-	}
-
-	Random &random = Random::instance();
-	double F = 0.;
-	do {
-		x = std::pow(10, -3 * random.rand());
-		F = pionSpectrum(x, ePrimary);
-	} while(F < random.rand() * Fmax);
-	return x * ePrimary;
-}
-
-double HadronicInteraction::sampleEtaEnergy(double ePrimary) const {
-	double Fmax = 0.;
-	const double xMin = 1. / 1000.;
-	const double xMax = 1.;
-	const double stepSize = 1. / 1000.;
-
-	double x = xMin;
-	while (x < xMax) {
-		double F = etaSpectrum(x, ePrimary);
-		if (F > Fmax)
-			Fmax = F;
-		x += stepSize;
-	}
-
-	Random &random = Random::instance();
-	double F = 0.;
-	do {
-		x = std::pow(10, -3 * random.rand());
-		F = etaSpectrum(x, ePrimary);
-	} while(F < random.rand() * Fmax);
-	return x * ePrimary;
+double HadronicInteraction::spectrumPhoton(double x, double ePrimary) const {
+	const double L = std::log(ePrimary / TeV);
+	const double B = 1.30 + 0.14 * L + 0.011 * L * L;
+	const double beta = 1. / (1.79 + 0.11 * L + 0.008 * L * L);
+	const double k = 0.801 + 0.049 * L + 0.014 * L * L;
+	const double xb = std::pow(x, beta);
+	const double term1 = B * std::log(x) / x;
+	const double term2 = (1. - xb) / (1 + k * xb * (1 - xb));
+	const double term3 = 1 / std::log(x) - 4 * beta * xb / (1 - xb);
+	const double term4 = 4 * k * beta * xb * (1 - 2 * xb) / (1 + k * xb * (1 - xb));
+	const double Fgamma = term1 * std::pow(term2, 4) * (term3 - term4);
+	return Fgamma;
 }
 
 double HadronicInteraction::xSectionKelner06(double ePrimary) const {
@@ -98,20 +66,25 @@ double HadronicInteraction::xSectionKelner06(double ePrimary) const {
 }
 
 void HadronicInteraction::process(Candidate *candidate) const {
-	const double stepLength = candidate->getCurrentStep();
+	if (this->massDensity <= 0.)
+		return;
+
+	const int id = candidate->current.getId();
+	if (!isNucleus(id))
+		return;
+
 	const double ePrimary = candidate->current.getEnergy();
-	const double xSection = xSectionKelner06(ePrimary);
-	const double interactionProbability = xSection * stepLength * massDensity;
-
-	const double limit = 1 / interactionProbability * 0.1;
-	if (stepLength > limit)
-		candidate->limitNextStep(limit);
-
 	if (ePrimary < 1. * GeV)
 		return;
 
+	const double xSection = xSectionKelner06(ePrimary);
+	const double meanFreePath = 1. / (xSection * this->massDensity);
+	const double stepLength = candidate->getCurrentStep();
+	const double interactionProbability = stepLength / meanFreePath;
+
 	Random &random = Random::instance();
 	if (random.rand() > interactionProbability)
+		candidate->limitNextStep(this->limit * meanFreePath);
 		return;
 
 	performInteraction(candidate);
@@ -124,41 +97,38 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
 
 	Random &random = Random::instance();
 	const double startPiont = random.rand();
-	bool doPi0 = (startPiont >= 0. && startPiont < 0.25);
-	bool doPiCharged = (startPiont >= 0.25 && startPiont < 0.75);
-	bool doEta = (startPiont >= 0.75 && startPiont <= 1.);
-	bool donePi0 = false;
+	bool doPhoton = (startPiont >= 0. && startPiont < 0.5);
+	bool doPiCharged = (startPiont >= 0.5 && startPiont <= 1.);
+	bool donePhoton = false;
 	bool donePiCharged = false;
-	bool doneEta = false;
 
 	do {
-		if (doPi0 && !donePi0) {
-			int nPi0 = std::round(gaussInt([this, eAvailable](double x) { return this->pionSpectrum(x, eAvailable); }, 0., 1.));
-			// std::cout << "nPi0 = " << nPi0 << std::endl;
-			for (int i = 0; i < nPi0; ++i) {
-				const double ePi0 = samplePionEnergy(eAvailable);
-				// std::cout << "ePi0 = " << ePi0 / GeV << std::endl;
-				if (eAvailable >= ePi0) {
-					outPartID.push_back(111);
-					outPartE.push_back(ePi0);
-					eAvailable -= ePi0;
+		if (doPhoton && !donePhoton) {
+			// const double xMin = 1 * GeV / eAvailable;
+			const double xMin = std::min(1 * GeV / eAvailable, 1e-3);
+			const double xMax = 1.;
+			int nPhoton = std::round(gaussInt([this, eAvailable](double x) { return this->spectrumPhoton(x, eAvailable); }, xMin, xMax));
+			for (int i = 0; i < nPhoton; ++i) {
+				const double ePhoton = sampleParticleEnergy([this, eAvailable](double x) { return this->spectrumPhoton(x, eAvailable); }, eAvailable);
+				if (eAvailable >= ePhoton) {
+					outPartID.push_back(22);
+					outPartE.push_back(ePhoton);
+					eAvailable -= ePhoton;
 				} else {
 					break;
 				}
 			}
 			doPiCharged = true;
-			doEta = true;
-			donePi0 = true;
+			donePhoton = true;
 		}
 
 		if (doPiCharged && !donePiCharged) {
-			int nPiCharged = 2 * std::round(gaussInt([this, eAvailable](double x) { return this->pionSpectrum(x, eAvailable); }, 0., 1.));
-			// std::cout << "nPi+/- = " << nPiCharged << std::endl;
+			const double xMin = 0.;
+			const double xMax = 1.;
+			int nPiCharged = 2 * std::round(gaussInt([this, eAvailable](double x) { return this->spectrumPion(x, eAvailable); }, xMin, xMax));
 			for (int i = 0; i < nPiCharged / 2; ++i) {
-				const double ePiPlus = samplePionEnergy(eAvailable);
-				const double ePiMinus = samplePionEnergy(eAvailable);
-				// std::cout << "ePi+ = " << ePiPlus / GeV << std::endl;    
-				// std::cout << "ePi- = " << ePiMinus / GeV << std::endl;
+				const double ePiPlus = sampleParticleEnergy([this, eAvailable](double x) { return this->spectrumPion(x, eAvailable); }, eAvailable);
+				const double ePiMinus = sampleParticleEnergy([this, eAvailable](double x) { return this->spectrumPion(x, eAvailable); }, eAvailable);
 				if (eAvailable >= ePiPlus + ePiMinus) {
 					outPartID.push_back(211);
 					outPartE.push_back(ePiPlus);
@@ -171,37 +141,17 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
 					break;
 				}
 			}
-			doPi0 = true;
-			doEta = true;
+			doPhoton = true;
 			donePiCharged = true;
 		}
-
-		if (doEta && !doneEta) {
-			int nEta = std::round(gaussInt([this, eAvailable](double x) { return this->etaSpectrum(x, eAvailable); }, 0., 1.));
-			// std::cout << "nEta = " << nEta << std::endl;
-			for (int i = 0; i < nEta; ++i) {
-				const double eEta = sampleEtaEnergy(eAvailable);
-				// std::cout << "eEta = " << eEta / GeV << std::endl;    
-				if (eAvailable >= eEta) {
-					outPartID.push_back(221);
-					outPartE.push_back(eEta);
-					eAvailable -= eEta;
-				} else {
-					break;
-				}
-			}
-			doPi0 = true;
-			doPiCharged = true;
-			doneEta = true;
-		}
-	} while (!donePi0 || !donePiCharged || !doneEta);
+	} while (!donePhoton || !donePiCharged);
 
 	candidate->current.setEnergy(eAvailable);
-	std::cout << "ePrimary = " << eAvailable / GeV << std::endl;
+	// std::cout << "ePrimary = " << eAvailable / GeV << std::endl;
 	const Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	for (int i = 0; i < outPartID.size(); ++i) {
 		candidate->addSecondary(outPartID[i], outPartE[i], pos);
-		std::cout << outPartID[i] << " " << outPartE[i] / GeV << std::endl;
+		std::cout << outPartID[i] << "\t" << outPartE[i] / GeV << std::endl;
 	}
 }
 
