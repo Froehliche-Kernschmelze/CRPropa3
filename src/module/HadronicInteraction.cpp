@@ -104,7 +104,6 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
 
 	do {
 		if (doPhoton && !donePhoton) {
-			// const double xMin = 1 * GeV / eAvailable;
 			const double xMin = std::min(1 * GeV / eAvailable, 1e-3);
 			const double xMax = 1.;
 			int nPhoton = std::round(gaussInt([this, eAvailable](double x) { return this->spectrumPhoton(x, eAvailable); }, xMin, xMax));
@@ -147,7 +146,7 @@ void HadronicInteraction::performInteraction(Candidate *candidate) const {
 	} while (!donePhoton || !donePiCharged);
 
 	candidate->current.setEnergy(eAvailable);
-	// std::cout << "ePrimary = " << eAvailable / GeV << std::endl;
+
 	const Vector3d pos = random.randomInterpolatedPosition(candidate->previous.getPosition(), candidate->current.getPosition());
 	for (int i = 0; i < outPartID.size(); ++i) {
 		candidate->addSecondary(outPartID[i], outPartE[i], pos);
