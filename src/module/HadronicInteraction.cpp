@@ -20,7 +20,7 @@ HadronicInteraction::HadronicInteraction(double massDensity, double limit) {
 }
 
 void HadronicInteraction::setMassDensity(double dens) {
-	this->massDensity = massDensity;
+	this->massDensity = dens;
 }
 
 void HadronicInteraction::setLimit(double lim) {
