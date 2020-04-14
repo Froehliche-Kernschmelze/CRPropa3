@@ -83,9 +83,10 @@ void HadronicInteraction::process(Candidate *candidate) const {
 	const double interactionProbability = stepLength / meanFreePath;
 
 	Random &random = Random::instance();
-	if (random.rand() > interactionProbability)
+	if (random.rand() > interactionProbability) {
 		candidate->limitNextStep(this->limit * meanFreePath);
 		return;
+	}
 
 	performInteraction(candidate);
 }
