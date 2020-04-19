@@ -13,26 +13,31 @@ namespace crpropa {
  */
 // Photon fields
 // The default IRB model is that of Kneiske et al. 2004
-enum PhotonField {
-	CMB,
-	IRB,  // same as IRB_Kneiske04
-	IRB_Kneiske04,
-	IRB_Stecker05,
-	IRB_Franceschini08,
-	IRB_Finke10,
-	IRB_Dominguez11,
-	IRB_Gilmore12,
-	IRB_Stecker16_upper,
-	IRB_Stecker16_lower,
-	URB_Protheroe96
+
+
+class PhotonField {
+public:
+	PhotonField();
+	explicit PhotonField(std::string fieldName);
+	std::string getFieldName() const;
+
+	// Returns overall comoving scaling factor
+	double getRedshiftScaling(double z) const;
+	double samplePhotonEnergy(bool onProton, double ePrimary, double zPrimary) const;
+	void setPhotonEnergyRange(std::string filePath);
+	void setPhotonEnergyRange(double photonEnergies[]);
+	void setRedshiftRange(std::string filePath);
+	void setRedshiftRange(double redshifts[]);
+	void setPhotonDensity(std::string filePath);
+	void setPhotonDensity(double densities[]);
+	bool getHasRedshiftDependence();
+
+protected:
+	std::vector<double> photonEnergies;
+	std::vector<double> redshifts;
+	std::vector<double> photonDensity;
+	bool hasRedshiftDependence;
 };
-
-// Returns overall comoving scaling factor
-double photonFieldScaling(PhotonField photonField, double z);
-
-// Returns a string representation of the field
-std::string photonFieldName(PhotonField photonField);
-
 
 /**
  @class photonFieldSampling
