@@ -11,10 +11,12 @@ namespace crpropa {
  * \addtogroup EnergyLosses
  * @{
  */
-// Photon fields
-// The default IRB model is that of Kneiske et al. 2004
 
 
+/**
+ @class PhotonField
+ @brief photon field class fully defined with a range of photon energies, redshift and the field's density
+ */
 class PhotonField {
 public:
 	PhotonField(std::string fieldName, bool hasRedshiftDependence = true);
