@@ -17,26 +17,27 @@ namespace crpropa {
 
 class PhotonField {
 public:
-	PhotonField();
-	explicit PhotonField(std::string fieldName);
+	PhotonField(std::string fieldName, bool hasRedshiftDependence = true);
+	PhotonField() : PhotonField("CMB", false) {};
+
+	double getPhotonDensity(double ePhoton, double z = 0.) const;
+	double getRedshiftScaling(double z) const;  // returns overall comoving scaling factor (cf. CRPropa3-data/calc_scaling.py)
+	bool getHasRedshiftDependence() const;
 	std::string getFieldName() const;
 
-	// Returns overall comoving scaling factor
-	double getRedshiftScaling(double z) const;
-	double samplePhotonEnergy(bool onProton, double ePrimary, double zPrimary) const;
-	void setPhotonEnergyRange(std::string filePath);
-	void setPhotonEnergyRange(double photonEnergies[]);
-	void setRedshiftRange(std::string filePath);
-	void setRedshiftRange(double redshifts[]);
-	void setPhotonDensity(std::string filePath);
-	void setPhotonDensity(double densities[]);
-	bool getHasRedshiftDependence();
-
 protected:
+	void initPhotonEnergy(std::string fieldName);
+	void initPhotonDensity(std::string fieldName);
+	void initRedshift(std::string fieldName);
+	void initRedshiftScaling();
+	void checkInputData() const;
+
 	std::vector<double> photonEnergies;
-	std::vector<double> redshifts;
 	std::vector<double> photonDensity;
+	std::vector<double> redshifts;
+	std::vector<double> redshiftScalings;
 	bool hasRedshiftDependence;
+	std::string fieldName;
 };
 
 /**
