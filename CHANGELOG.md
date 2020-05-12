@@ -4,10 +4,20 @@
 
 ### New features:
 
+* Photon fields are now implemented as classes instead of enum objects.
+  What changes for the user is to call photon fields with parantheses:
+  CMB -> CMB(), IRB_Kneiske04 -> IRBKneiske04(), ...
+* There are new photon field structures for future customization. These include:
+  BlackbodyPhotonField, PowerLawPhotonField, TabularPhotonField (for custom tabulated photon fields).
+  Their classes are implemented but aren't supported for this Version.
 * Planck JF12b variant of the JF12Field. See arXiv:1601.00546. Thanks to
 	Mikhail Zotov for contributing.
 
 ### Features that are deprecated and will be removed after this release:
+
+* Interaction modules no longer default to the CMB if using photon fields.
+* Photon field URB_Protheroe96 will not be supported anymore
+* "IRB" as a photon field name is deprecated. Use IRB_Kneiske04() instead.
 
 ### New plugins and resources linked on the webpages:
 
